@@ -391,11 +391,9 @@ fun MinimaRPC(type: String, data: String, callback: Callback) {
  * Post a message to the Minima Event Listeners
  */
 fun MinimaPostMessage(event: String, info: dynamic) {
-  console.log("MinimaPostMessage(event: $event, info: ${JSON.stringify(info)})")
-  //Create Data Object
+//  console.log("MinimaPostMessage(event: $event, info: ${JSON.stringify(info)})")
   val data = jsObject<dynamic>{ this.event = event; this.info = info }
 
-  //And dispatch
   MINIMA_MAIN_CALLBACK?.let{ it(data) }
 }
 
