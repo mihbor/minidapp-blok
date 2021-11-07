@@ -17,6 +17,7 @@ kotlin {
         browser()
         binaries.executable()
     }
+    @Suppress("UNUSED_VARIABLE")
     sourceSets {
         val jsMain by getting {
             dependencies {
@@ -31,5 +32,13 @@ afterEvaluate {
     rootProject.extensions.configure<org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension> {
         versions.webpackDevServer.version = "4.0.0"
         versions.webpackCli.version = "4.9.0"
+    }
+}
+tasks.register<Zip>("minidappDistribution") {
+    dependsOn("jsBrowserDistribution")
+    archiveFileName.set("blok.minidapp")
+    destinationDirectory.set(layout.buildDirectory.dir("minidapp"))
+    from(layout.buildDirectory.dir("distributions")) {
+        exclude("*.map")
     }
 }
