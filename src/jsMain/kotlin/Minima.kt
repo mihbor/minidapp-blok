@@ -87,16 +87,26 @@ object Minima {
 
     log("Initialising...")
 
-    //Calculate MiniDAPP ID given HREF location
-    val startId = window.location.href.indexOf("/minidapps")
-    val endId   = window.location.href.indexOf("/", startId + 11)
+    val inWindow = try {
+      window != undefined
+    } catch (t: Throwable) {
+      false
+    }
 
-    if (startId != -1 && endId != -1) {
-      //Get it...
-      minidappid = window.location.href.substring(startId + 11, endId)
-      log("MiniDAPP ID set : $minidappid")
+    if(inWindow) {
+      //Calculate MiniDAPP ID given HREF location
+      val startId = window.location.href.indexOf("/minidapps")
+      val endId = window.location.href.indexOf("/", startId + 11)
+
+      if (startId != -1 && endId != -1) {
+        //Get it...
+        minidappid = window.location.href.substring(startId + 11, endId)
+        log("MiniDAPP ID set : $minidappid")
+      } else {
+        log("Not running on /minidapps URL.. MiniDAPP ID remains unchanged : $minidappid")
+      }
     } else {
-      log("Not running on /minidapps URL.. MiniDAPP ID remains unchanged : $minidappid")
+      log("Not running in window. Service-worker?")
     }
 
     //Store the callback
@@ -107,7 +117,7 @@ object Minima {
     }
 
     //Are we running via a server - otherwise leave as is
-    if (!debug) {
+    if (!debug && inWindow) {
       if(window.location.protocol.startsWith("http")) {
         //The Port determives the WebSocket and RPC port...
         webhost = "http://${window.location.hostname}:${window.location.port.toInt()}"
@@ -166,14 +176,14 @@ object Minima {
   /**
    * Runs a function on the Minima Command Line
    */
-  fun cmd(miniFunc: String, callback: Callback) {
+  fun cmd(miniFunc: String, callback: Callback = null) {
     MinimaRPC("cmd", miniFunc, callback)
   }
 
   /**
    * Run SQL
    */
-  fun sql(query: String, callback: Callback) {
+  fun sql(query: String, callback: Callback = null) {
     MinimaRPC("sql", query, callback)
   }
 
@@ -182,7 +192,7 @@ object Minima {
    */
   object net {
     //SERVER FUNCTIONS
-    fun onInbound(port: Int, onReceiveCallback: Callback) {
+    fun onInbound(port: Int, onReceiveCallback: Callback = null) {
       MINIMA_SERVER_LISTEN.push("""{ "port": $port, "callback": $onReceiveCallback }""")
     }
 
@@ -199,7 +209,7 @@ object Minima {
     }
 
     //USER FUNCTIONS
-    fun onOutbound(port: Int, onReceiveCallback: Callback) {
+    fun onOutbound(port: Int, onReceiveCallback: Callback = null) {
       MINIMA_USER_LISTEN.push("""{ "port": $port, "callback": $onReceiveCallback }""")
     }
 
@@ -221,17 +231,17 @@ object Minima {
     }
 
     //Receive all info in the callback
-    fun stats(callback: Callback) {
+    fun stats(callback: Callback = null) {
       MinimaRPC("net", "stats", callback)
     }
 
     //GET an URL
-    fun GET(url: String, callback: Callback) {
+    fun GET(url: String, callback: Callback = null) {
       MinimaRPC("net", "get "+url, callback)
     }
 
     //POST params to an URL
-    fun POST(url: String, params: Any, callback: Callback) {
+    fun POST(url: String, params: Any, callback: Callback = null) {
       MinimaRPC("net", "post $url $params", callback)
     }
 
@@ -243,40 +253,40 @@ object Minima {
   object file {
 
     //Save & Load Text to a file
-    fun save(text: String, file: String, callback: Callback) {
+    fun save(text: String, file: String, callback: Callback = null) {
       MinimaRPC("file", "save $file $text", callback)
     }
 
-    fun load(file: String, callback: Callback) {
+    fun load(file: String, callback: Callback = null) {
       MinimaRPC("file", "load $file", callback)
     }
 
     //Save and Load as HEX.. Strings with 0x..
-    fun saveHEX(hextext: String, file: String, callback: Callback) {
+    fun saveHEX(hextext: String, file: String, callback: Callback = null) {
       MinimaRPC("file", "savehex $file $hextext", callback)
     }
 
-    fun loadHEX(file: String, callback: Callback) {
+    fun loadHEX(file: String, callback: Callback = null) {
       MinimaRPC("file"," loadhex $file", callback)
     }
 
     //Copy file..
-    fun copy(file: String, newFile: String, callback: Callback) {
+    fun copy(file: String, newFile: String, callback: Callback = null) {
       MinimaRPC("file", "copy $file $newFile", callback)
     }
 
     //Rename a file in your folder
-    fun move(file: String, newFile: String, callback: Callback) {
+    fun move(file: String, newFile: String, callback: Callback = null) {
       MinimaRPC("file", "move $file $newFile", callback)
     }
 
     //List the files in a directory
-    fun list(file: String, callback: Callback) {
+    fun list(file: String, callback: Callback = null) {
       MinimaRPC("file", "list $file", callback)
     }
 
     //Delete a File
-    fun delete(file: String, callback: Callback) {
+    fun delete(file: String, callback: Callback = null) {
       MinimaRPC("file", "delete $file", callback)
     }
   }

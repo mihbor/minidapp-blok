@@ -14,7 +14,11 @@ repositories {
 
 kotlin {
     js(IR) {
-        browser()
+        browser{
+            commonWebpackConfig{
+                devServer?.`open` = false
+            }
+        }
         binaries.executable()
     }
     @Suppress("UNUSED_VARIABLE")
