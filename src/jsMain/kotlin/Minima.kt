@@ -1,11 +1,13 @@
+import androidx.compose.runtime.NoLiveLiterals
 import kotlinx.browser.document
 import kotlinx.browser.window
 import org.jetbrains.compose.web.css.jsObject
 import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.HTMLTableElement
 import org.w3c.dom.WebSocket
-import org.w3c.xhr.XMLHttpRequest
+import org.w3c.fetch.*
 import kotlin.js.Date
+import kotlin.js.Promise
 import kotlin.math.floor
 import kotlin.random.Random
 
@@ -137,6 +139,7 @@ object Minima {
 
     //Do the first call...
     cmd("topblock;balance") { json: Array<dynamic> ->
+      console.log("response to topblock;balance : $json")
       if (json[0].status != null) {
         block  = (json[0].response.txpow.header.block as String).toInt(10)
         txpow  = json[0].response.txpow
@@ -599,56 +602,60 @@ fun MinimaCreateNotification(text: String, bgcolor: String? = null) {
   }, 4000)
 }
 
+external fun fetch(input: dynamic, init: RequestInit = definedExternally): Promise<Response> = definedExternally
+
 /**
  * Utility function for GET request
  *
- * @param theUrl
+ * @param url
  * @param callback
  * @param params
  * @returns
  */
-fun <T> httpPostAsync(theUrl: String, params: Any?, callback: ((T) -> Unit)? = null) {
+fun <T> httpPostAsync(url: String, params: Any?, callback: ((T) -> Unit)? = null) {
 
-  val xmlHttp = XMLHttpRequest()
-  xmlHttp.onreadystatechange = {
-    if (xmlHttp.readyState == 4.toShort() && xmlHttp.status == 200.toShort()) {
+  val headers = Headers()
+  headers.set("Content-Type", "application/x-www-form-urlencoded")
+  fetch(url, RequestInit(
+    "POST",
+    headers,
+    params,
+  )).then { response ->
+    if(response.ok) {
       if (Minima.logging) {
-        Minima.log("RPC:$theUrl\nPARAMS:$params\nRESPONSE:${xmlHttp.responseText}")
+        Minima.log("RPC:$url\nPARAMS:$params\nRESPONSE:${response.body}")
       }
 
       if (callback != null) {
-        callback(JSON.parse(xmlHttp.responseText))
+        response.json()
+          .then{ it as T }
+          .then(callback)
       }
     }
   }
-  xmlHttp.open("POST", theUrl, async = true)
-  xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
-  xmlHttp.send(params)
+
 }
 
 /**
  * Utility function for GET request
  *
- * @param theUrl
+ * @param url
  * @param callback
  * @returns
  */
-fun <T>httpGetAsync(theUrl: String, logEnabled: Boolean = false, callback: ((T) -> Unit)?) {
-  val xmlHttp = XMLHttpRequest()
-  xmlHttp.onreadystatechange = {
-    if (xmlHttp.readyState == 4.toShort() && xmlHttp.status == 200.toShort()) {
-      val rpcJson = JSON.parse<T>(xmlHttp.responseText)
-
+fun <T>httpGetAsync(url: String, logEnabled: Boolean = false, callback: ((T) -> Unit)?) {
+  fetch(url, RequestInit(
+    "GET"
+  )).then { response ->
+    if(response.ok) {
       if(Minima.logging && logEnabled) {
-        val logString = JSON.stringify(rpcJson, null, 2).replace("\\n","\n")
-        Minima.log("$theUrl\n$logString")
+        val logString = JSON.stringify(response.body, null, 2).replace("\\n","\n")
+        Minima.log("$url\n$logString")
       }
 
       if (callback != null) {
-        callback(rpcJson)
+        callback(response.body)
       }
     }
   }
-  xmlHttp.open("GET", theUrl, async = true)
-  xmlHttp.send(null)
 }

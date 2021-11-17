@@ -48,6 +48,7 @@ fun init(block: () -> Unit) {
 fun listenForBlocks(consumer: (Block) -> Unit) {
 
   Minima.debug = true
+  Minima.logging = true
   Minima.init{
     val msg = it
     when(msg.event) {
