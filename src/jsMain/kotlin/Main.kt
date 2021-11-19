@@ -2,6 +2,7 @@
 import androidx.compose.runtime.mutableStateListOf
 import kotlinx.browser.window
 import kotlinx.datetime.Instant
+import minima.Minima
 import org.jetbrains.compose.web.renderComposable
 
 data class Block(

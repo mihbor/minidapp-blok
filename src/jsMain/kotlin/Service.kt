@@ -1,3 +1,4 @@
+import minima.Minima
 import org.w3c.workers.ServiceWorkerGlobalScope
 
 const val appName = "BloK"
@@ -39,12 +40,12 @@ fun service() {
   })
   self.addEventListener("activate", {
     console.log("Service worker activated")
-    minima()
+    runMinima()
   })
 
 }
 
-fun minima() {
+fun runMinima() {
   Minima.debug = true
   Minima.init{ msg: dynamic ->
     if (msg.event == "connected") {

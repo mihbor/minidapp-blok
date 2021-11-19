@@ -1,13 +1,15 @@
-import androidx.compose.runtime.NoLiveLiterals
+package minima
+
 import kotlinx.browser.document
 import kotlinx.browser.window
 import org.jetbrains.compose.web.css.jsObject
 import org.w3c.dom.HTMLDivElement
 import org.w3c.dom.HTMLTableElement
 import org.w3c.dom.WebSocket
-import org.w3c.fetch.*
+import org.w3c.dom.WindowOrWorkerGlobalScope
+import org.w3c.fetch.Headers
+import org.w3c.fetch.RequestInit
 import kotlin.js.Date
-import kotlin.js.Promise
 import kotlin.math.floor
 import kotlin.random.Random
 
@@ -42,6 +44,7 @@ var MINIMA_PARAMS: dynamic = null
 var MINIMA_SERVER_LISTEN: dynamic = null
 var MINIMA_USER_LISTEN: dynamic   = null
 
+external val self: WindowOrWorkerGlobalScope
 
 /**
  * Main MINIMA Object for all interaction
@@ -602,7 +605,7 @@ fun MinimaCreateNotification(text: String, bgcolor: String? = null) {
   }, 4000)
 }
 
-external fun fetch(input: dynamic, init: RequestInit = definedExternally): Promise<Response> = definedExternally
+//external fun fetch(input: dynamic, init: RequestInit = definedExternally): Promise<Response> = definedExternally
 
 /**
  * Utility function for GET request
@@ -616,7 +619,7 @@ fun <T> httpPostAsync(url: String, params: Any?, callback: ((T) -> Unit)? = null
 
   val headers = Headers()
   headers.set("Content-Type", "application/x-www-form-urlencoded")
-  fetch(url, RequestInit(
+  self.fetch(url, RequestInit(
     "POST",
     headers,
     params,
@@ -644,7 +647,7 @@ fun <T> httpPostAsync(url: String, params: Any?, callback: ((T) -> Unit)? = null
  * @returns
  */
 fun <T>httpGetAsync(url: String, logEnabled: Boolean = false, callback: ((T) -> Unit)?) {
-  fetch(url, RequestInit(
+  self.fetch(url, RequestInit(
     "GET"
   )).then { response ->
     if(response.ok) {
