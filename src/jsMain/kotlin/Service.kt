@@ -1,20 +1,10 @@
 import minima.Minima
+import minima.encodeURIComponent
 import org.w3c.workers.ServiceWorkerGlobalScope
 
 const val appName = "BloK"
 
-const val INIT_SQL = """
-  CREATE TABLE IF NOT EXISTS txpowlist (
-    txpow VARCHAR(16000) NOT NULL PRIMARY KEY,
-    height BIGINT NOT NULL,
-    hash VARCHAR(160) NOT NULL,
-    isblock INT NOT NULL,
-    relayed BIGINT NOT NULL,
-    txns INT NOT NULL
-  )"""
-
-const val INDEX_HASH = "CREATE INDEX hash_idx ON txpowlist(hash)"
-const val INDEX_HEIGHT = "CREATE INDEX height_idx ON txpowlist(height DESC)"
+const val txPoWMaxSize = 16000
 
 fun createSQL() {
   Minima.file.load("createSql.txt") { fileResult ->
@@ -26,6 +16,25 @@ fun createSQL() {
         } else {
           Minima.file.save("", "createSql.txt")
         }
+      }
+    }
+  }
+}
+
+fun addTxPoW(txpow: dynamic) {
+  val txPoWSize = txpow.size
+  val txPoWHeight = txpow.header.block
+  if (txPoWSize > txPoWMaxSize) {
+    Minima.log("$appName: Transaction at height: $txPoWHeight with size: $txPoWSize is too big for database column.")
+  } else if (txpow.body == null) {
+    Minima.log("txpow body not found!")
+  } else {
+    val txpowEncoded = encodeURIComponent(JSON.stringify(txpow).replace("'", "%27"))
+    val isBlock = if(txpow.isblock) 1 else 0
+    Minima.sql("INSERT INTO txpowlist VALUES (\'$txpowEncoded\', $txPoWHeight, \'${txpow.txpowid}\', $isBlock, ${txpow.header.timemilli}, ${txpow.body.txnlist.length})"){
+      if (it.status) {
+        Minima.log("$appName: timemilli ${txpow.header.timemilli}")
+        Minima.log("TxPoW Added To SQL Table... ")
       }
     }
   }
@@ -55,9 +64,7 @@ fun runMinima() {
 
     } else if (msg.event == "newtxpow") {
 
-//      addTxPoW(msg.info.txpow)
-//
-//      pruneData(msg.info.txpow.header.block)
+      addTxPoW(msg.info.txpow)
 
     }
   }

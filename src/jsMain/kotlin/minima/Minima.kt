@@ -142,7 +142,6 @@ object Minima {
 
     //Do the first call...
     cmd("topblock;balance") { json: Array<dynamic> ->
-      console.log("response to topblock;balance : $json")
       if (json[0].status != null) {
         block  = (json[0].response.txpow.header.block as String).toInt(10)
         txpow  = json[0].response.txpow
