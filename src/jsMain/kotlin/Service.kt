@@ -24,17 +24,21 @@ fun createSQL() {
 fun addTxPoW(txpow: dynamic) {
   val txPoWSize = txpow.size
   val txPoWHeight = txpow.header.block
-  if (txPoWSize > txPoWMaxSize) {
-    Minima.log("$appName: Transaction at height: $txPoWHeight with size: $txPoWSize is too big for database column.")
-  } else if (txpow.body == null) {
+  if (txpow.body == null) {
     Minima.log("txpow body not found!")
   } else {
+    txpow.body.witness.signatures = null
+    txpow.body.witness.mmrproofs = null
     val txpowEncoded = encodeURIComponent(JSON.stringify(txpow).replace("'", "%27"))
-    val isBlock = if(txpow.isblock) 1 else 0
-    Minima.sql("INSERT INTO txpowlist VALUES (\'$txpowEncoded\', $txPoWHeight, \'${txpow.txpowid}\', $isBlock, ${txpow.header.timemilli}, ${txpow.body.txnlist.length})"){
-      if (it.status) {
-        Minima.log("$appName: timemilli ${txpow.header.timemilli}")
-        Minima.log("TxPoW Added To SQL Table... ")
+    if (txPoWSize > txPoWMaxSize) {
+      Minima.log("$appName: Transaction at height: $txPoWHeight with size: $txPoWSize is too big for database column.")
+    } else {
+      val isBlock = if (txpow.isblock) 1 else 0
+      Minima.sql("INSERT INTO txpowlist VALUES (\'$txpowEncoded\', $txPoWHeight, \'${txpow.txpowid}\', $isBlock, ${txpow.header.timemilli}, ${txpow.body.txnlist.length})") {
+        if (it.status) {
+          Minima.log("$appName: timemilli ${txpow.header.timemilli}")
+          Minima.log("TxPoW Added To SQL Table... ")
+        }
       }
     }
   }
@@ -42,7 +46,6 @@ fun addTxPoW(txpow: dynamic) {
 
 external val self: ServiceWorkerGlobalScope
 
-@JsExport
 fun service() {
   self.addEventListener("install", {
     console.log("Service worker installed")

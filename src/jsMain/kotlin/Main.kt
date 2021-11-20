@@ -22,11 +22,13 @@ fun main() {
   init{
     val blocks = mutableStateListOf<Block>()
 
+    initMinima { block -> blocks += block }
+
     populateBlocks(blocks)
 
-    listenForBlocks { block -> blocks += block }
 
     renderComposable(rootElementId = "root") {
+      Search()
       BlockList(blocks)
     }
   }
@@ -73,7 +75,7 @@ fun populateBlocks(blocks: SnapshotStateList<Block>) {
   }
 }
 
-fun listenForBlocks(consumer: (Block) -> Unit) {
+fun initMinima(consumer: (Block) -> Unit) {
 
   Minima.debug = true
   Minima.logging = true

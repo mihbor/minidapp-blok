@@ -68,7 +68,7 @@ object Minima {
   /**
    * The MiniDAPP ID
    */
-  var minidappid = "0x00"
+  var minidappid: String? = null
 
   //Web Host for the MinDAPP System
   var webhost = "http://127.0.0.1:9004"
@@ -98,21 +98,27 @@ object Minima {
       false
     }
 
-    if(inWindow) {
-      //Calculate MiniDAPP ID given HREF location
-      val startId = window.location.href.indexOf("/minidapps")
-      val endId = window.location.href.indexOf("/", startId + 11)
+    fun getMinidappId(): String {
+      if (inWindow) {
+        //Calculate MiniDAPP ID given HREF location
+        val startId = window.location.href.indexOf("/minidapps")
+        val endId = window.location.href.indexOf("/", startId + 11)
 
-      if (startId != -1 && endId != -1) {
-        //Get it...
-        minidappid = window.location.href.substring(startId + 11, endId)
-        log("MiniDAPP ID set : $minidappid")
+        if (startId != -1 && endId != -1) {
+          return window.location.href.substring(startId + 11, endId)
+        } else {
+          log("Not running on /minidapps URL... MiniDAPP ID remains unchanged : $minidappid")
+        }
       } else {
-        log("Not running on /minidapps URL.. MiniDAPP ID remains unchanged : $minidappid")
+        log("Not running in window. Service-worker?")
       }
-    } else {
-      log("Not running in window. Service-worker?")
+      return "0x00"
     }
+
+    if(minidappid == null) {
+      minidappid = getMinidappId()
+    }
+    log("MiniDAPP ID set : $minidappid")
 
     //Store the callback
     if (callback != null) {
@@ -397,7 +403,7 @@ object Minima {
 /**
  * POST the RPC call - can be cmd/sql/file/net
  */
-fun MinimaRPC(type: String, data: String, callback: Callback) {
+fun MinimaRPC(type: String, data: String, callback: Callback = null) {
   //And now fire off a call saving it
   httpPostAsync(Minima.rpchost+"/"+type+"/"+Minima.minidappid, encodeURIComponent(data), callback)
 }
@@ -614,7 +620,7 @@ fun MinimaCreateNotification(text: String, bgcolor: String? = null) {
  * @param params
  * @returns
  */
-fun <T> httpPostAsync(url: String, params: Any?, callback: ((T) -> Unit)? = null) {
+fun httpPostAsync(url: String, params: Any?, callback: Callback = null) {
 
   val headers = Headers()
   headers.set("Content-Type", "application/x-www-form-urlencoded")
@@ -630,7 +636,6 @@ fun <T> httpPostAsync(url: String, params: Any?, callback: ((T) -> Unit)? = null
 
       if (callback != null) {
         response.json()
-          .then{ it as T }
           .then(callback)
       }
     }
