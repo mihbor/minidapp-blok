@@ -12,4 +12,15 @@ const val INIT_SQL = """
 const val INDEX_HASH = "CREATE INDEX hash_idx ON txpowlist(hash)"
 const val INDEX_HEIGHT = "CREATE INDEX height_idx ON txpowlist(height DESC)"
 
-const val SELECT_LAST_100 = "SELECT * from txpowlist WHERE isblock = 1 ORDER BY HEIGHT DESC LIMIT 100"
+fun selectLatest(limit: Int = 100) = "SELECT * from txpowlist WHERE isblock = 1 ORDER BY HEIGHT DESC LIMIT $limit"
+
+fun insertBlock(
+  txpowEncoded: String,
+  height: Int,
+  txpowId: String,
+  isBlock: Int,
+  relayed: Long,
+  length: Int
+) = "INSERT INTO txpowlist VALUES (\'$txpowEncoded\', $height, \'$txpowId\', $isBlock, $relayed, $length)"
+
+fun search(query: String) = "SELECT * FROM txpowlist WHERE TXPOW LIKE '%$query%' ORDER BY RELAYED"

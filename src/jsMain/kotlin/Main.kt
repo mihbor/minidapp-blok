@@ -54,7 +54,7 @@ fun init(block: () -> Unit) {
 
 fun populateBlocks(blocks: SnapshotStateList<Block>) {
   try {
-    Minima.sql(SELECT_LAST_100) {
+    Minima.sql(selectLatest()) {
 //      console.log("$appName : fetching all previous blocks saved on SQL.");
       if (it.status) {
         if (it.response.status && it.response.rows != null) {

@@ -34,7 +34,7 @@ fun addTxPoW(txpow: dynamic) {
       Minima.log("$appName: Transaction at height: $txPoWHeight with size: $txPoWSize is too big for database column.")
     } else {
       val isBlock = if (txpow.isblock) 1 else 0
-      Minima.sql("INSERT INTO txpowlist VALUES (\'$txpowEncoded\', $txPoWHeight, \'${txpow.txpowid}\', $isBlock, ${txpow.header.timemilli}, ${txpow.body.txnlist.length})") {
+      Minima.sql(insertBlock(txpowEncoded, txPoWHeight, txpow.txpowid, isBlock, txpow.header.timemilli, txpow.body.txnlist.length)) {
         if (it.status) {
           Minima.log("$appName: timemilli ${txpow.header.timemilli}")
           Minima.log("TxPoW Added To SQL Table... ")
