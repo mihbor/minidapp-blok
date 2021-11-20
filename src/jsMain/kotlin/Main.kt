@@ -1,11 +1,15 @@
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import kotlinx.browser.window
 import kotlinx.datetime.Instant
 import minima.Minima
 import minima.decodeURIComponent
 import org.jetbrains.compose.web.renderComposable
+import org.w3c.dom.url.URLSearchParams
 
 data class Block(
   val hash: String,
@@ -19,17 +23,21 @@ data class Block(
 )
 
 fun main() {
+
   init{
+    val searchParam = URLSearchParams(window.location.search).get("search")
+    var isSearching by mutableStateOf(!searchParam.isNullOrBlank())
     val blocks = mutableStateListOf<Block>()
+    val results = mutableStateListOf<Block>()
 
     initMinima { block -> blocks += block }
 
-    populateBlocks(blocks)
-
+    populateBlocks(selectLatest(100), blocks)
 
     renderComposable(rootElementId = "root") {
-      Search()
-      BlockList(blocks)
+      console.log("isSearching: $isSearching")
+      Search(searchParam, results) { isSearching = it }
+      BlockList(if (isSearching) results else blocks)
     }
   }
 }
@@ -52,9 +60,9 @@ fun init(block: () -> Unit) {
   }
 }
 
-fun populateBlocks(blocks: SnapshotStateList<Block>) {
+fun populateBlocks(sql: String, blocks: SnapshotStateList<Block>) {
   try {
-    Minima.sql(selectLatest()) {
+    Minima.sql(sql) {
 //      console.log("$appName : fetching all previous blocks saved on SQL.");
       if (it.status) {
         if (it.response.status && it.response.rows != null) {
