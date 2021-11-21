@@ -11,22 +11,48 @@ import org.jetbrains.compose.web.dom.Button
 import org.jetbrains.compose.web.dom.Form
 import org.jetbrains.compose.web.dom.Input
 import org.jetbrains.compose.web.dom.Text
-import org.w3c.dom.url.URLSearchParams
+import org.w3c.dom.PopStateEvent
+import org.w3c.dom.url.URL
 
 @Composable
 fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching: (Boolean) -> Unit) {
+
   var searchInput by mutableStateOf(searchParam ?: "")
+
+  fun setSearchParam(search: String?) {
+    val url = URL(window.location.href)
+    if (search != null) url.searchParams.set("search", search)
+    else url.searchParams.delete("search")
+    window.history.pushState(search, "", url.toString())
+  }
+
+  fun updateResults(search: String) {
+    results.clear()
+    populateBlocks(search(search), results)
+    setSearching(true)
+  }
+
+  fun clearSearch() {
+    searchInput = ""
+    setSearching(false)
+  }
+
+  window.addEventListener("popstate", {
+    val event = it as PopStateEvent
+    if(event.state == null) {
+      clearSearch()
+    } else {
+      searchInput = it.state.toString()
+      updateResults(searchInput)
+    }
+  })
 
   Form(attrs = {
     this.addEventListener("submit") {
       it.preventDefault()
       if (searchInput.isNotBlank()) {
-        val searchParams = URLSearchParams(window.location.search)
-        searchParams.set("search", searchInput)
-        window.history.pushState(null, "", "?$searchParams")
-        setSearching(true)
-        results.clear()
-        populateBlocks(search(searchInput), results)
+        setSearchParam(searchInput)
+        updateResults(searchInput)
       }
     }
   }) {
@@ -40,6 +66,20 @@ fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching
         searchInput = it.value
       }
     })
+    if (searchInput.isNotBlank()) {
+      Button(attrs = {
+        style {
+          width(25.px)
+        }
+        onClick {
+          it.preventDefault()
+          setSearchParam(null)
+          clearSearch()
+        }
+      }) {
+        Text("X")
+      }
+    }
     Button(attrs = {
       style {
         width(100.px)
