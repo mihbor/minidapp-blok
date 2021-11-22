@@ -27,8 +27,8 @@ fun addTxPoW(txpow: dynamic) {
   if (txpow.body == null) {
     Minima.log("txpow body not found!")
   } else {
-    txpow.body.witness.signatures = null
-    txpow.body.witness.mmrproofs = null
+//    txpow.body.witness.signatures = null
+//    txpow.body.witness.mmrproofs = null
     val txpowEncoded = encodeURIComponent(JSON.stringify(txpow).replace("'", "%27"))
     if (txPoWSize > txPoWMaxSize) {
       Minima.log("$appName: Transaction at height: $txPoWHeight with size: $txPoWSize is too big for database column.")

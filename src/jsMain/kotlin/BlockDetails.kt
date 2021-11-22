@@ -1,7 +1,13 @@
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import org.jetbrains.compose.web.attributes.cols
 import org.jetbrains.compose.web.attributes.colspan
+import org.jetbrains.compose.web.attributes.rows
 import org.jetbrains.compose.web.dom.*
 
+var showJson by mutableStateOf(false)
 @Composable
 fun BlockDetails(block: Block) {
   Table {
@@ -35,6 +41,27 @@ fun BlockDetails(block: Block) {
     Tr {
       Td { Text("Parent") }
       Td { Text(block.parentHash) }
+    }
+    Tr {
+      Td(attrs = {
+        style {
+          property("vertical-align", "top")
+        }
+      }) {
+        Button(attrs = {
+          onClick { showJson = !showJson }
+        }) {
+          Text("${if (showJson) "Hide" else "Show"} JSON")
+        }
+      }
+      Td {
+        if (showJson) {
+          TextArea(JSON.stringify(block.txpow, null, 2)) {
+            cols(150)
+            rows(20)
+          }
+        }
+      }
     }
   }
 }

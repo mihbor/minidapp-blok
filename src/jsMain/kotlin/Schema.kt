@@ -1,7 +1,7 @@
 
 const val INIT_SQL = """
   CREATE TABLE IF NOT EXISTS txpowlist (
-    txpow VARCHAR(16000) NOT NULL PRIMARY KEY,
+    txpow VARCHAR(64000) NOT NULL PRIMARY KEY,
     height BIGINT NOT NULL,
     hash VARCHAR(160) NOT NULL,
     isblock INT NOT NULL,

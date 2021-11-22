@@ -19,7 +19,8 @@ data class Block(
   val size: Long,
   val nonce: Long,
   val superBlockLevel: Byte,
-  val parentHash: String
+  val parentHash: String,
+  val txpow: dynamic
 )
 
 fun main() {
@@ -110,5 +111,6 @@ fun mapTxPoW(txpow: dynamic) = Block(
   size = txpow.size,
   nonce = (txpow.header.nonce as String).toLong(),
   superBlockLevel = txpow.superblock,
-  parentHash = txpow.header.superparents[0].parent
+  parentHash = txpow.header.superparents[0].parent,
+  txpow
 )
