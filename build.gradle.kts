@@ -1,6 +1,7 @@
 plugins {
     kotlin("multiplatform") version "1.5.31"
-    id("org.jetbrains.compose") version "1.0.0-alpha4-build362"
+    kotlin("plugin.serialization") version "1.5.31"
+    id("org.jetbrains.compose") version "1.0.0"
 }
 
 group = "org.example"
@@ -28,6 +29,8 @@ kotlin {
                 implementation(compose.web.core)
                 implementation(compose.runtime)
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
+                implementation("com.ionspin.kotlin:bignum:0.3.3")
+                implementation("com.ionspin.kotlin:bignum-serialization-kotlinx:0.3.3")
             }
         }
     }

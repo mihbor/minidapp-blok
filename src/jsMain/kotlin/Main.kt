@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import kotlinx.browser.window
+import kotlinx.coroutines.MainScope
 import kotlinx.datetime.Instant
 import minima.Minima
 import minima.decodeURIComponent
@@ -22,6 +23,8 @@ data class Block(
   val parentHash: String,
   val txpow: dynamic
 )
+
+val scope = MainScope()
 
 fun main() {
 
@@ -64,7 +67,6 @@ fun init(block: () -> Unit) {
 fun populateBlocks(sql: String, blocks: SnapshotStateList<Block>) {
   try {
     Minima.sql(sql) {
-//      console.log("$appName : fetching all previous blocks saved on SQL.");
       if (it.status) {
         if (it.response.status && it.response.rows != null) {
           blocks += (it.response.rows as Array<dynamic>)
@@ -94,7 +96,6 @@ fun initMinima(consumer: (Block) -> Unit) {
       "connected" -> console.log("Connected to Minima.")
       "newtxpow" -> {
         val txpow = msg.info.txpow
-//        console.log("txpow: ${JSON.stringify(txpow)}")
         console.log("isBlock: ${txpow.isblock}")
         if (txpow.isblock) {
           consumer.invoke(mapTxPoW(txpow))
@@ -103,6 +104,7 @@ fun initMinima(consumer: (Block) -> Unit) {
     }
   }
 }
+
 fun mapTxPoW(txpow: dynamic) = Block(
   hash = txpow.txpowid,
   number = (txpow.header.block as String).toLong(),

@@ -1,20 +1,19 @@
 package minima
 
-import kotlinx.browser.document
 import kotlinx.browser.window
-import org.jetbrains.compose.web.css.jsObject
-import org.w3c.dom.HTMLDivElement
-import org.w3c.dom.HTMLTableElement
 import org.w3c.dom.WebSocket
 import org.w3c.dom.WindowOrWorkerGlobalScope
 import org.w3c.fetch.Headers
 import org.w3c.fetch.RequestInit
+import kotlin.coroutines.suspendCoroutine
 import kotlin.js.Date
-import kotlin.math.floor
-import kotlin.random.Random
 
 external fun decodeURIComponent(encodedURI: String): String
 external fun encodeURIComponent(string: String): String
+
+@Suppress("NOTHING_TO_INLINE")
+inline fun <T : Any> jsObject(): T = js("({})")
+inline fun <T : Any> jsObject(builder: T.() -> Unit): T = jsObject<T>().apply(builder)
 
 typealias Callback = ((dynamic) -> Unit)?
 
@@ -85,8 +84,15 @@ object Minima {
   //Are we in DEBUG mode - if so don't touch the host settings...
   var debug = false
 
-  //Show mining messages - can be dealt with by the MiniDAPP
-  var showMining = true
+  suspend fun init() = suspendCoroutine<Unit> { cont ->
+    init {
+      val msg = it
+      if (msg.event == "connected") {
+        if (debug) console.log("Connected to Minima.")
+        cont.resumeWith(Result.success(Unit))
+      }
+    }
+  }
 
   fun init(callback: ((dynamic) -> Unit)?) {
 
@@ -171,24 +177,16 @@ object Minima {
   }
 
   /**
-   * Notify the user with a Pop up message
-   */
-  fun notify(message: String, bgColor: String? = null) {
-    log("Notify : $message")
-
-    //Show a little popup across the screen..
-    if (bgColor != null) {
-      MinimaCreateNotification(message, bgColor)
-    }else{
-      MinimaCreateNotification(message)
-    }
-  }
-
-  /**
    * Runs a function on the Minima Command Line
    */
-  fun cmd(miniFunc: String, callback: Callback = null) {
+  fun cmd(miniFunc: String, callback: Callback) {
     MinimaRPC("cmd", miniFunc, callback)
+  }
+
+  suspend fun cmd(miniFunc: String) = suspendCoroutine<dynamic> { cont ->
+    cmd(miniFunc) { response ->
+      cont.resumeWith(Result.success(response))
+    }
   }
 
   /**
@@ -395,9 +393,7 @@ object Minima {
       //Not found
       return null
     }
-
   }
-
 }
 
 /**
@@ -493,7 +489,6 @@ fun MinimaWebSocketListener() {
           sendCallback(MINIMA_USER_LISTEN, jmsg.details.hostport, jmsg.details)
         }
       } else if(jmsg.details.action == "post") {
-        //Call the MiniDAPP function...
         MINIMA_MINIDAPP_CALLBACK?.let{ it(jmsg.details) }
           ?: Minima.minidapps.reply(jmsg.details.replyid, "ERROR - no minidapp interface found")
 
@@ -505,17 +500,9 @@ fun MinimaWebSocketListener() {
       val info = jsObject<dynamic> { transaction = jmsg.transaction }
       MinimaPostMessage("miningstart", info)
 
-      if (Minima.showMining) {
-        Minima.notify("Mining Transaction Started..", "#55DD55")
-      }
-
     } else if(jmsg.event == "txpowend") {
       val info = jsObject<dynamic> { transaction = jmsg.transaction }
       MinimaPostMessage("miningstop", info)
-
-      if (Minima.showMining) {
-        Minima.notify("Mining Transaction Finished", "#DD5555")
-      }
     }
   }
 
@@ -538,79 +525,6 @@ fun MinimaWebSocketListener() {
 fun sendCallback(list: List<dynamic>, port: Int, msg: String) {
   list.find { it.port == port }?.callback(msg)
 }
-
-/**
- * Notification Div
- */
-var TOTAL_NOTIFICATIONS = 0
-var TOTAL_NOTIFICATIONS_MAX = 0
-
-fun MinimaCreateNotification(text: String, bgcolor: String? = null) {
-  //First add the total overlay div
-  val notifyDiv = document.createElement("div") as HTMLDivElement
-
-  //Create a random ID for this DIV...
-  val notifyId = floor(Random.nextDouble() * 1000000000)
-
-  notifyDiv.id  = notifyId.toString()
-  notifyDiv.style.position = "absolute"
-
-  notifyDiv.style.top = "${20 + TOTAL_NOTIFICATIONS_MAX * 110}"
-  TOTAL_NOTIFICATIONS++
-  TOTAL_NOTIFICATIONS_MAX++
-
-  notifyDiv.style.right = "0"
-  notifyDiv.style.width = "400"
-  notifyDiv.style.height = "90"
-
-  //Regular or specific color
-  if (bgcolor != null) {
-    notifyDiv.style.background = bgcolor
-  }else{
-    notifyDiv.style.background = "#bbbbbb"
-  }
-
-  notifyDiv.style.opacity = "0"
-  notifyDiv.style.borderRadius = "10px"
-  notifyDiv.style.border = "thick solid #222222"
-
-  //Add it to the Page
-  document.body!!.appendChild(notifyDiv)
-
-  //Create an HTML window
-  val notifyText = "<table border=0 width=400 height=90><tr>" +
-    "<td style='width:400;height:90;font-size:16px;font-family:monospace;color:black;text-align:center;vertical-align:middle;'>" +
-    text +
-    "</td></tr></table>"
-
-  //Now get that element
-  val elem = document.getElementById(notifyId.toString()) as HTMLTableElement
-
-  elem.innerHTML = notifyText
-
-  //Fade in..
-  elem.style.transition = "all 1s"
-
-  // reflow
-  elem.getBoundingClientRect()
-
-  // it transitions!
-  elem.style.opacity = "0.8"
-  elem.style.right = "40"
-
-  //And create a timer to shut it down...
-  window.setTimeout({
-    TOTAL_NOTIFICATIONS--
-    if (TOTAL_NOTIFICATIONS <= 0) {
-      TOTAL_NOTIFICATIONS = 0
-      TOTAL_NOTIFICATIONS_MAX = 0
-    }
-
-    (document.getElementById(notifyId.toString()) as HTMLTableElement).style.display = "none"
-  }, 4000)
-}
-
-//external fun fetch(input: dynamic, init: RequestInit = definedExternally): Promise<Response> = definedExternally
 
 /**
  * Utility function for GET request

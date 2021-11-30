@@ -1,15 +1,20 @@
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromDynamic
+import minima.Minima
 import org.jetbrains.compose.web.attributes.cols
 import org.jetbrains.compose.web.attributes.colspan
 import org.jetbrains.compose.web.attributes.rows
+import org.jetbrains.compose.web.css.fontWeight
 import org.jetbrains.compose.web.dom.*
 
 var showJson by mutableStateOf(false)
+val txnCache = mutableStateMapOf<String, dynamic>()
+
 @Composable
 fun BlockDetails(block: Block) {
+  var selected by remember { mutableStateOf<String?>(null) }
   Table {
     Tr {
       Td(attrs = { colspan(2)}) { Text("Details for block: ${block.number}") }
@@ -27,10 +32,6 @@ fun BlockDetails(block: Block) {
       Td { Text(block.size.toString()) }
     }
     Tr {
-      Td { Text("Transaction Count") }
-      Td { Text(block.transactionCount.toString()) }
-    }
-    Tr {
       Td { Text("Nonce") }
       Td { Text(block.nonce.toString()) }
     }
@@ -41,6 +42,42 @@ fun BlockDetails(block: Block) {
     Tr {
       Td { Text("Parent") }
       Td { Text(block.parentHash) }
+    }
+    Tr {
+      Td { Text("Transactions") }
+      Td { Text(block.transactionCount.toString()) }
+    }
+    if (block.transactionCount > 0) Tr {
+      Td()
+      Td {
+        val transactions = Json.decodeFromDynamic<Array<String>>(block.txpow.body.txnlist)
+        transactions.forEach { txn ->
+          Hr()
+          Div({
+            title("Click to expand/hide")
+            onClick {
+              if (selected != txn){
+                selected = txn
+                if (!txnCache.containsKey(txn)) scope.launch {
+                  console.log("caching txn $txn")
+                  val txnpowinfo = Minima.cmd("txpowinfo $txn")
+                  txnCache.put(txn, txnpowinfo.response.txpow)
+                }
+              }
+              else selected = null
+            }
+            if (txn == selected) style {
+              fontWeight("bold")
+            }
+          }) {
+            Text(txn)
+          }
+          if (txn == selected) {
+            TransactionDetails(txn)
+          }
+        }
+        Hr()
+      }
     }
     Tr {
       Td(attrs = {

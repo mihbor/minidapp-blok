@@ -1,14 +1,12 @@
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import org.jetbrains.compose.web.attributes.colspan
+import org.jetbrains.compose.web.css.fontWeight
 import org.jetbrains.compose.web.dom.*
 
 @Composable
 fun BlockList(blocks: SnapshotStateList<Block>) {
-  var selected by mutableStateOf<Block?>(null)
+  var selected by remember { mutableStateOf<String?>(null) }
   Table {
     Thead {
       Tr {
@@ -20,25 +18,32 @@ fun BlockList(blocks: SnapshotStateList<Block>) {
     }
     Tbody {
       blocks.map { block ->
-        Tr(attrs = {
-          id(block.hash)
-          onClick {
-            if(selected?.hash != block.hash) selected = block
-            else selected = null
-          }
-        }) {
-          Td { Text(block.number.toString()) }
-          Td { Text(block.hash) }
-          Td { Text(block.transactionCount.toString()) }
-          Td { Text(block.timestamp.toString()) }
-        }
-        if (block.hash == selected?.hash) {
+        key(block.hash) {
           Tr(attrs = {
-            id("details")
+            title("Click to expand/hide")
+            onClick {
+              console.log("Clicked ${block.hash} selected $selected")
+              if (selected != block.hash) selected = block.hash
+              else selected = null
+              console.log("Clicked ${block.hash} selected $selected")
+            }
+            if (block.hash == selected) style {
+              fontWeight("bold")
+            }
           }) {
-            Td(attrs = { colspan(4) }) {
-              BlockDetails(block)
-              Hr {  }
+            Td { Text(block.number.toString()) }
+            Td { Text(block.hash) }
+            Td { Text(block.transactionCount.toString()) }
+            Td { Text(block.timestamp.toString()) }
+          }
+          if (block.hash == selected) {
+            key("details") {
+              Tr {
+                Td(attrs = { colspan(4) }) {
+                  BlockDetails(block)
+                  Hr { }
+                }
+              }
             }
           }
         }
