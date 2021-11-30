@@ -1,6 +1,6 @@
 plugins {
     kotlin("multiplatform") version "1.5.31"
-    id("org.jetbrains.compose") version "1.0.0-alpha4-build362"
+    id("org.jetbrains.compose") version "1.0.0-rc6"
 }
 
 group = "org.example"
@@ -15,9 +15,9 @@ repositories {
 kotlin {
     js(IR) {
         browser{
-            commonWebpackConfig{
-                devServer?.`open` = false
-            }
+//            commonWebpackConfig{
+//                devServer?.`open` = false
+//            }
         }
         binaries.executable()
     }
@@ -26,6 +26,7 @@ kotlin {
         val jsMain by getting {
             dependencies {
                 implementation(compose.web.core)
+                implementation(compose.web.svg)
                 implementation(compose.runtime)
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
             }

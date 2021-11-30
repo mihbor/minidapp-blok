@@ -1,14 +1,17 @@
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import kotlinx.browser.window
 import kotlinx.datetime.Instant
 import minima.Minima
 import minima.decodeURIComponent
+import org.jetbrains.compose.web.ExperimentalComposeWebSvgApi
+import org.jetbrains.compose.web.css.rgb
+import org.jetbrains.compose.web.dom.Div
 import org.jetbrains.compose.web.renderComposable
+import org.jetbrains.compose.web.svg.Circle
+import org.jetbrains.compose.web.svg.Svg
+import org.jetbrains.compose.web.svg.SvgText
 import org.w3c.dom.url.URLSearchParams
 
 data class Block(
@@ -36,9 +39,37 @@ fun main() {
     populateBlocks(selectLatest(100), blocks)
 
     renderComposable(rootElementId = "root") {
+      svg()
       console.log("isSearching: $isSearching")
       Search(searchParam, results) { isSearching = it }
       BlockList(if (isSearching) results else blocks)
+    }
+  }
+}
+
+@OptIn(ExperimentalComposeWebSvgApi::class)
+@Composable
+fun svg() {
+  Div {
+    Svg(viewBox = "0 0 200 3") {
+      var currentColor by remember { mutableStateOf(0) }
+      val colors = listOf(
+        rgb(200, 0, 0),
+        rgb(100, 0, 0),
+        rgb(100, 20, 0),
+        rgb(20, 100, 0)
+      )
+      Circle(2, 1.5, 1.5, {
+        attr("stroke", "black")
+        attr("stroke-width", "0.1")
+        attr("fill", "white")
+        onClick {
+          currentColor = (currentColor + 1).mod(colors.size)
+        }
+      })
+      SvgText("8", x = 1.5, y = 2.5) {
+        attr("font-size", "2.5")
+      }
     }
   }
 }
