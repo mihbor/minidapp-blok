@@ -1,8 +1,8 @@
 import androidx.compose.runtime.Composable
-import org.jetbrains.compose.web.dom.Table
-import org.jetbrains.compose.web.dom.Td
-import org.jetbrains.compose.web.dom.Text
-import org.jetbrains.compose.web.dom.Tr
+import org.jetbrains.compose.web.css.height
+import org.jetbrains.compose.web.css.px
+import org.jetbrains.compose.web.css.width
+import org.jetbrains.compose.web.dom.*
 
 @Composable
 fun InputOutputDetails(it: InputOutput) {
@@ -14,7 +14,19 @@ fun InputOutputDetails(it: InputOutput) {
     }
     Tr {
       Td { Text("token") }
-      Td { Text(it.tokenid) }
+      Td {
+        tokens[it.tokenid]?.let { token ->
+          token.icon ?: "minima.svg".takeIf { token.tokenid == "0x00" }?.let {
+            Img(it) {
+              style {
+                width(24.px)
+                height(24.px)
+              }
+            }
+          }
+          Text(" ${token.token}")
+        } ?: Text(it.tokenid)
+      }
     }
     Tr {
       Td { Text("amount") }

@@ -1,13 +1,15 @@
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import com.ionspin.kotlin.bignum.serialization.kotlinx.bigdecimal.bigDecimalHumanReadableSerializerModule
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromDynamic
 import minima.Minima
+import minima.Token
 import minima.decodeURIComponent
 import org.jetbrains.compose.web.renderComposable
 import org.w3c.dom.url.URLSearchParams
@@ -26,15 +28,24 @@ data class Block(
 
 val scope = MainScope()
 
+val json = Json {
+  serializersModule = bigDecimalHumanReadableSerializerModule
+}
+
+val tokens = mutableStateMapOf<String, Token>()
+
 fun main() {
 
-  init{
+  init {
     val searchParam = URLSearchParams(window.location.search).get("search")
     var isSearching by mutableStateOf(!searchParam.isNullOrBlank())
     val blocks = mutableStateListOf<Block>()
     val results = mutableStateListOf<Block>()
 
     initMinima { block -> blocks += block }
+    scope.launch {
+      tokens.putAll(getTokens().associate { it.tokenid to it })
+    }
 
     populateBlocks(selectLatest(100), blocks)
 
@@ -62,6 +73,11 @@ fun init(block: () -> Unit) {
   } catch (t: Throwable) {
     service()
   }
+}
+
+suspend fun getTokens(): Array<Token> {
+  val tokens = Minima.cmd("tokens")
+  return json.decodeFromDynamic(tokens.response.tokens)
 }
 
 fun populateBlocks(sql: String, blocks: SnapshotStateList<Block>) {
