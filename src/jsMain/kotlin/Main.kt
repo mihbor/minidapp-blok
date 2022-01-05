@@ -44,7 +44,7 @@ fun main() {
 
     initMinima { block -> blocks += block }
     scope.launch {
-      tokens.putAll(getTokens().associate { it.tokenid to it })
+      tokens.putAll(getTokens().associateBy { it.tokenid })
     }
 
     populateBlocks(selectLatest(100), blocks)
