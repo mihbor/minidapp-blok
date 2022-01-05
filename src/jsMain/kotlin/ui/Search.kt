@@ -1,3 +1,6 @@
+package ui
+
+import Block
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,6 +16,8 @@ import org.jetbrains.compose.web.dom.Input
 import org.jetbrains.compose.web.dom.Text
 import org.w3c.dom.PopStateEvent
 import org.w3c.dom.url.URL
+import populateBlocks
+import search
 
 @Composable
 fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching: (Boolean) -> Unit) {

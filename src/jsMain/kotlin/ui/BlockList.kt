@@ -1,3 +1,6 @@
+package ui
+
+import Block
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import org.jetbrains.compose.web.attributes.colspan

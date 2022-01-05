@@ -1,3 +1,7 @@
+package ui
+
+import Block
+import TransactionDetails
 import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -8,6 +12,7 @@ import org.jetbrains.compose.web.attributes.colspan
 import org.jetbrains.compose.web.attributes.rows
 import org.jetbrains.compose.web.css.fontWeight
 import org.jetbrains.compose.web.dom.*
+import scope
 
 var showJson by mutableStateOf(false)
 val txnCache = mutableStateMapOf<String, dynamic>()

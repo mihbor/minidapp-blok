@@ -13,6 +13,8 @@ import minima.Token
 import minima.decodeURIComponent
 import org.jetbrains.compose.web.renderComposable
 import org.w3c.dom.url.URLSearchParams
+import ui.BlockList
+import ui.Search
 
 data class Block(
   val hash: String,

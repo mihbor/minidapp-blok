@@ -5,6 +5,8 @@ import kotlinx.serialization.json.decodeFromDynamic
 import org.jetbrains.compose.web.dom.H5
 import org.jetbrains.compose.web.dom.Hr
 import org.jetbrains.compose.web.dom.Text
+import ui.InputOutputDetails
+import ui.txnCache
 
 @Serializable
 data class InputOutput(
