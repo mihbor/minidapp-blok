@@ -6,7 +6,7 @@ import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromDynamic
-import minima.Minima
+import minima.MDS
 import org.jetbrains.compose.web.attributes.cols
 import org.jetbrains.compose.web.attributes.colspan
 import org.jetbrains.compose.web.attributes.rows
@@ -65,7 +65,7 @@ fun BlockDetails(block: Block) {
                 selected = txn
                 if (!txnCache.containsKey(txn)) scope.launch {
                   console.log("caching txn $txn")
-                  val txnpowinfo = Minima.cmd("txpowinfo $txn")
+                  val txnpowinfo = MDS.cmd("txpow txpowid:$txn")
                   txnCache.put(txn, txnpowinfo.response.txpow)
                 }
               }

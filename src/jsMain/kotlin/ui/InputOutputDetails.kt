@@ -10,7 +10,7 @@ import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.dom.Tr
 import tokens
 
-infix fun BigDecimal.toToken(token: Token?) = this * BigDecimal.TEN.pow((token?.scale ?: "0").toLong())
+infix fun BigDecimal.toToken(token: Token?) = this * BigDecimal.TEN.pow(token?.scale ?: 0)
 
 infix fun String.toToken(token: Token?) = BigDecimal.parseString(this).toToken(token).toPlainString()
 

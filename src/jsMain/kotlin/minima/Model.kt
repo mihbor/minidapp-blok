@@ -1,63 +1,58 @@
+@file:UseContextualSerialization(BigDecimal::class)
+@file:OptIn(ExperimentalSerializationApi::class)
+
 package minima
 
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
-import kotlinx.serialization.Contextual
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
-
-
-fun Iterable<BigDecimal>.sum(): BigDecimal {
-  var sum: BigDecimal = BigDecimal.ZERO
-  for (element in this) {
-    sum += element
-  }
-  return sum
-}
+import kotlinx.serialization.UseContextualSerialization
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNames
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.int
 
 @Serializable
 data class Balance(
   val tokenid: String,
-  val token: String,
-  val total: String,
-  val decimals: String,
-  @Contextual
+  val token: JsonElement,
+//  val total: String,
   val confirmed: BigDecimal,
-  @Contextual
   val unconfirmed: BigDecimal,
-  val mempool: String,
-  @Contextual
-  val sendable: BigDecimal
-)
-
-@Serializable
-data class CoinSimple(
-  val key: String,
-  @Contextual
-  val tokenamount: BigDecimal,
-  val coin: Coin
-)
-
-@Serializable
-data class Coin(
-  val address: String,
-  val amount: String,
-  val coinid: String,
-  val floating: Boolean,
-  val mxaddress: String,
-  val storestate: Boolean,
-  val tokenid: String
+  val sendable: BigDecimal,
+  val coins: Int
 )
 
 @Serializable
 data class Token(
   val tokenid: String,
-  val token: String,
-  val total: String,
-  val decimals: String,
-  val description: String? = null,
-  val icon: String? = null,
-  val proof: String? = null,
+  val name: JsonElement,
+  val total: BigDecimal,
+  val decimals: Int,
   val script: String? = null,
   val coinid: String? = null,
-  val totalamount: String? = null,
-  val scale: String? = null
+  val totalamount: BigDecimal? = null,
+  @JsonNames("scale")
+  val _scale: JsonPrimitive
+) {
+  val scale get() = if (_scale.isString) _scale.content.toInt() else _scale.int
+}
+
+@Serializable
+data class Coin(
+  val address: String,
+  val amount: BigDecimal,
+  val tokenamount: BigDecimal = amount,
+  val coinid: String,
+  val storestate: Boolean,
+  val tokenid: String,
+  val created: String,
+  val state: List<State>
+)
+
+@Serializable
+data class State(
+  val port: Int,
+  val type: Int,
+  val data: String
 )

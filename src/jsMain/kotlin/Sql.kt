@@ -9,8 +9,8 @@ const val INIT_SQL = """
     txns INT NOT NULL
   )"""
 
-const val INDEX_HASH = "CREATE INDEX hash_idx ON txpowlist(hash)"
-const val INDEX_HEIGHT = "CREATE INDEX height_idx ON txpowlist(height DESC)"
+const val INDEX_HASH = "CREATE INDEX IF NOT EXISTS hash_idx ON txpowlist(hash)"
+const val INDEX_HEIGHT = "CREATE INDEX IF NOT EXISTS height_idx ON txpowlist(height DESC)"
 
 fun selectLatest(limit: Int = 100) = "SELECT * from txpowlist WHERE isblock = 1 ORDER BY HEIGHT DESC LIMIT $limit"
 

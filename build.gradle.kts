@@ -16,9 +16,9 @@ repositories {
 kotlin {
     js(IR) {
         browser{
-            commonWebpackConfig{
-                devServer?.`open` = false
-            }
+//            commonWebpackConfig{
+//                devServer?.`open` = false
+//            }
         }
         binaries.executable()
     }
@@ -43,9 +43,7 @@ afterEvaluate {
 }
 tasks.register<Zip>("minidappDistribution") {
     dependsOn("jsBrowserDistribution")
-    archiveFileName.set("blok.minidapp")
+    archiveFileName.set("blok.mds.zip")
     destinationDirectory.set(layout.buildDirectory.dir("minidapp"))
-    from(layout.buildDirectory.dir("distributions")) {
-        exclude("*.map")
-    }
+    from(layout.buildDirectory.dir("distributions"))
 }
