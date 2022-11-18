@@ -1,8 +1,8 @@
 package ui
 
-import InputOutput
 import androidx.compose.runtime.Composable
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
+import minima.Coin
 import minima.Token
 import org.jetbrains.compose.web.dom.Table
 import org.jetbrains.compose.web.dom.Td
@@ -15,7 +15,7 @@ infix fun BigDecimal.toToken(token: Token?) = this * BigDecimal.TEN.pow(token?.s
 infix fun String.toToken(token: Token?) = BigDecimal.parseString(this).toToken(token).toPlainString()
 
 @Composable
-fun InputOutputDetails(it: InputOutput) {
+fun InputOutputDetails(it: Coin) {
 
   Table {
     Tr {
@@ -23,8 +23,8 @@ fun InputOutputDetails(it: InputOutput) {
       Td { Text(it.address) }
     }
     Tr {
-      Td { Text("mxaddress") }
-      Td { Text(it.mxaddress) }
+      Td { Text("miniaddress") }
+      Td { Text(it.miniaddress) }
     }
     Tr {
       Td { Text("token") }
@@ -34,7 +34,7 @@ fun InputOutputDetails(it: InputOutput) {
     }
     Tr {
       Td { Text("amount") }
-      Td { Text(it.amount toToken tokens[it.tokenid]) }
+      Td { Text(it.tokenamount.toPlainString()) }
     }
   }
 }

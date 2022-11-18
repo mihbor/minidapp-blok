@@ -1,7 +1,6 @@
 package ui
 
 import Block
-import TransactionDetails
 import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -38,7 +37,7 @@ fun BlockDetails(block: Block) {
     }
     Tr {
       Td { Text("Nonce") }
-      Td { Text(block.nonce.toString()) }
+      Td { Text(block.nonce.toPlainString()) }
     }
     Tr {
       Td { Text("Superblock level") }
@@ -56,29 +55,29 @@ fun BlockDetails(block: Block) {
       Td()
       Td {
         val transactions = Json.decodeFromDynamic<Array<String>>(block.txpow.body.txnlist)
-        transactions.forEach { txn ->
+        transactions.forEach { txnId ->
           Hr()
           Div({
             title("Click to expand/hide")
             onClick {
-              if (selected != txn){
-                selected = txn
-                if (!txnCache.containsKey(txn)) scope.launch {
-                  console.log("caching txn $txn")
-                  val txnpowinfo = MDS.cmd("txpow txpowid:$txn")
-                  txnCache.put(txn, txnpowinfo.response.txpow)
+              if (selected != txnId){
+                selected = txnId
+                if (!txnCache.containsKey(txnId)) scope.launch {
+                  console.log("caching txn $txnId")
+                  val txnpow = MDS.cmd("txpow txpowid:$txnId")
+                  txnCache.put(txnId, txnpow.response)
                 }
               }
               else selected = null
             }
-            if (txn == selected) style {
+            if (txnId == selected) style {
               fontWeight("bold")
             }
           }) {
-            Text(txn)
+            Text(txnId)
           }
-          if (txn == selected) {
-            TransactionDetails(txn)
+          if (txnId == selected) {
+            TransactionDetails(txnId)
           }
         }
         Hr()

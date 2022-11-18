@@ -1,8 +1,6 @@
 package minima
 
-import com.ionspin.kotlin.bignum.serialization.kotlinx.bigdecimal.bigDecimalHumanReadableSerializerModule
 import kotlinx.browser.window
-import kotlinx.serialization.json.Json
 import org.w3c.dom.WindowOrWorkerGlobalScope
 import org.w3c.fetch.RequestInit
 import org.w3c.fetch.Response
@@ -10,18 +8,7 @@ import self
 import kotlin.coroutines.suspendCoroutine
 import kotlin.js.Date
 
-external fun decodeURIComponent(encodedURI: String): String
-external fun encodeURIComponent(string: String): String
-
-@Suppress("NOTHING_TO_INLINE")
-inline fun <T : Any> jsObject(): T = js("({})")
-inline fun <T : Any> jsObject(builder: T.() -> Unit): T = jsObject<T>().apply(builder)
-
 typealias Callback = ((dynamic) -> Unit)?
-
-val json = Json {
-  serializersModule = bigDecimalHumanReadableSerializerModule
-}
 
 /**
  * The MAIN Minima Callback function
@@ -41,13 +28,6 @@ object MDS {
   
   //Is logging RPC enabled
   var logging = false
-  
-  //When debuggin you can hard set the Host and port
-  var DEBUG_HOST: String? = null
-  var DEBUG_PORT = -1
-  
-  //An allowed TEST Minidapp ID for SQL - can be overridden
-  var DEBUG_MINIDAPPID = "0x00"
   
   /**
    * Minima Startup - with the callback function used for all Minima messages
@@ -188,23 +168,17 @@ fun PollListener(){
   }
 }
 
-/**
- * Utility function for GET request
- *
- * @param theUrl
- * @param callback
- * @param params
- * @returns
- */
-
 external val self: WindowOrWorkerGlobalScope
 
 fun httpPostAsync(url: String, params: String, callback: Callback = null) {
   self.fetch(
     url,
     RequestInit("POST", body = encodeURIComponent(params))
-  ).then { response ->
-    if(response.ok) {
+  ).catch {
+    MDS.log("httpPostAsync failed: ${it.message} ${it.cause}")
+    null as Response?
+  }.then { response ->
+    if(response?.ok == true) {
       if (MDS.logging) {
         MDS.log("RPC:$url\nPARAMS:$params\nRESPONSE:${response.body}")
       }
@@ -215,11 +189,13 @@ fun httpPostAsync(url: String, params: String, callback: Callback = null) {
     }
   }
 }
+
 fun httpPostAsyncPoll(url: String, params: String, callback: Callback = null) {
   self.fetch(
     url,
     RequestInit("POST", body = encodeURIComponent(params))
   ).catch {
+    MDS.log("httpPostAsyncPoll failed: ${it.message} ${it.cause}")
     null as Response?
   }.then { response ->
     if (response?.ok == true) {
@@ -236,26 +212,3 @@ fun httpPostAsyncPoll(url: String, params: String, callback: Callback = null) {
     Unit
   }
 }
-
-//fun <T> httpPostAsyncPoll(theUrl: String, params: String, callback: ((T) -> Unit)){
-//  if(MDS.logging) {
-//    MDS.log("POST_POLL_RPC:$theUrl PARAMS:$params")
-//  }
-//
-//  val xmlHttp = XMLHttpRequest()
-//  xmlHttp.onreadystatechange = {
-//    if (xmlHttp.readyState == 4.toShort() && xmlHttp.status == 200.toShort()){
-//      if(MDS.logging){
-//        MDS.log("RESPONSE:"+xmlHttp.responseText);
-//      }
-//      callback.invoke(JSON.parse(xmlHttp.responseText))
-//    }
-//  }
-//  xmlHttp.addEventListener("error", {
-//    MDS.log("Error Polling - reconnect in 10s")
-//    window.setTimeout({PollListener()}, 10000)
-//  });
-//  xmlHttp.open("POST", theUrl, true) // true for asynchronous
-//  xmlHttp.overrideMimeType("text/plain; charset=UTF-8")
-//  xmlHttp.send(encodeURIComponent(params))
-//}

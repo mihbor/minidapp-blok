@@ -1,7 +1,6 @@
 package ui
 
 import androidx.compose.runtime.Composable
-import jsonString
 import minima.Token
 import org.jetbrains.compose.web.css.height
 import org.jetbrains.compose.web.css.px
@@ -14,7 +13,7 @@ fun TokenName(tokenId: String, tokens: Map<String, Token>) {
   
   val token = tokens[tokenId]
   if (token != null) {
-    (token.name.jsonString("icon")?.takeIf { it.isNotBlank() } ?: "minima.svg".takeIf { token.tokenid == "0x00" })?.let {
+    (token.url?.takeIf { it.isNotBlank() } ?: "minima.svg".takeIf { token.tokenid == "0x00" })?.let {
       Img(it) {
         style {
           width(16.px)
@@ -23,7 +22,7 @@ fun TokenName(tokenId: String, tokens: Map<String, Token>) {
         }
       }
     }
-    Text(" ${token.name.jsonString("name")}")
+    Text(" ${token.name}")
   } else {
     Text(tokenId)
   }
