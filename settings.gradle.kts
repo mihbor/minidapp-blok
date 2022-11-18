@@ -1,4 +1,4 @@
-rootProject.name = "minidapp-blockexplorer-kotlin-compose"
+rootProject.name = "minidapp-blok"
 
 pluginManagement {
   repositories {

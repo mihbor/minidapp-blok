@@ -1,7 +1,7 @@
 plugins {
-    kotlin("multiplatform") version "1.5.31"
-    kotlin("plugin.serialization") version "1.5.31"
-    id("org.jetbrains.compose") version "1.0.0"
+    kotlin("multiplatform") version "1.7.20"
+    kotlin("plugin.serialization") version "1.7.20"
+    id("org.jetbrains.compose") version "1.2.1"
 }
 
 group = "org.example"
@@ -28,22 +28,16 @@ kotlin {
             dependencies {
                 implementation(compose.web.core)
                 implementation(compose.runtime)
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
-                implementation("com.ionspin.kotlin:bignum:0.3.3")
-                implementation("com.ionspin.kotlin:bignum-serialization-kotlinx:0.3.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
+                implementation("com.ionspin.kotlin:bignum:0.3.7")
+                implementation("com.ionspin.kotlin:bignum-serialization-kotlinx:0.3.7")
             }
         }
     }
 }
-afterEvaluate {
-    rootProject.extensions.configure<org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension> {
-        versions.webpackDevServer.version = "4.0.0"
-        versions.webpackCli.version = "4.9.0"
-    }
-}
 tasks.register<Zip>("minidappDistribution") {
     dependsOn("jsBrowserDistribution")
-    archiveFileName.set("blok.mds.zip")
+    archiveFileName.set("${project.name}.mds.zip")
     destinationDirectory.set(layout.buildDirectory.dir("minidapp"))
     from(layout.buildDirectory.dir("distributions"))
 }

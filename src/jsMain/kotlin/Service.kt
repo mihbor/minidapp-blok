@@ -1,5 +1,7 @@
+import kotlinx.coroutines.launch
 import minima.MDS
 import minima.encodeURIComponent
+import org.w3c.dom.url.URLSearchParams
 import org.w3c.workers.ServiceWorkerGlobalScope
 
 const val appName = "BloK"
@@ -46,22 +48,23 @@ fun service() {
   })
   self.addEventListener("activate", {
     console.log("Service worker activated")
-    runMinima()
+    scope.launch {
+      runMinima()
+    }
   })
-
 }
 
-fun runMinima() {
-//  MDS.init{ msg: dynamic ->
-//    if (msg.event == "inited") {
-//
-//      // init SQL DB for blocks
-//      createSQL()
-//
-//    } else if (msg.event == "NEWBLOCK") {
-//
-//      addTxPoW(msg.data.txpow)
-//
-//    }
-//  }
+suspend fun runMinima() {
+  val uid = URLSearchParams(self.location.search).get("uid")
+  MDS.init(uid ?: "0x0", "localhost", 9003) { msg: dynamic ->
+    if (msg.event == "inited") {
+
+      createSQL()
+
+    } else if (msg.event == "NEWBLOCK") {
+
+      addTxPoW(msg.data.txpow)
+
+    }
+  }
 }

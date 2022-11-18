@@ -3,7 +3,10 @@ package minima
 import com.ionspin.kotlin.bignum.serialization.kotlinx.bigdecimal.bigDecimalHumanReadableSerializerModule
 import kotlinx.browser.window
 import kotlinx.serialization.json.Json
-import org.w3c.xhr.XMLHttpRequest
+import org.w3c.dom.WindowOrWorkerGlobalScope
+import org.w3c.fetch.RequestInit
+import org.w3c.fetch.Response
+import self
 import kotlin.coroutines.suspendCoroutine
 import kotlin.js.Date
 
@@ -193,79 +196,66 @@ fun PollListener(){
  * @param params
  * @returns
  */
-fun <T> httpPostAsync(theUrl: String, params: String, callback: ((T) -> Unit)? = null){
-  if(MDS.logging){
-    MDS.log("POST_RPC:$theUrl PARAMS:$params")
-  }
-  
-  val xmlHttp = XMLHttpRequest()
-  xmlHttp.onreadystatechange = {
-    if (xmlHttp.readyState == 4.toShort() && xmlHttp.status == 200.toShort()){
-      if(MDS.logging){
-        MDS.log("RESPONSE:"+xmlHttp.responseText)
+
+external val self: WindowOrWorkerGlobalScope
+
+fun httpPostAsync(url: String, params: String, callback: Callback = null) {
+  self.fetch(
+    url,
+    RequestInit("POST", body = encodeURIComponent(params))
+  ).then { response ->
+    if(response.ok) {
+      if (MDS.logging) {
+        MDS.log("RPC:$url\nPARAMS:$params\nRESPONSE:${response.body}")
       }
       
-      //Send it to the callback function
-      callback?.invoke(JSON.parse(xmlHttp.responseText))
-    }
-  }
-  xmlHttp.open("POST", theUrl, true) // true for asynchronous
-  xmlHttp.overrideMimeType("text/plain; charset=UTF-8")
-  //xmlHttp.setRequestHeader('Content-Type', 'application/json')
-  xmlHttp.send(encodeURIComponent(params))
-  //xmlHttp.send(params)
-}
-
-/**
- * Utility function for GET request (UNUSED for now..)
- *
- * @param theUrl
- * @param callback
- * @returns
- */
-/*function httpGetAsync(theUrl, callback)
-{
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.onreadystatechange = function() {
-        if (xmlHttp.readyState == 4 && xmlHttp.status == 200){
-        	if(MDS.logging){
-				console.log("RPC      : "+theUrl);
-				console.log("RESPONSE : "+xmlHttp.responseText);
-			}
-
-			//Always a JSON ..
-        	var rpcjson = JSON.parse(xmlHttp.responseText);
-        	
-        	//Send it to the callback function..
-        	if(callback){
-        		callback(rpcjson);
-        	}
-        }
-    }
-	xmlHttp.open("GET", theUrl, true); // true for asynchronous
-    xmlHttp.send(null);
-}*/
-
-fun <T> httpPostAsyncPoll(theUrl: String, params: String, callback: ((T) -> Unit)){
-  if(MDS.logging){
-    MDS.log("POST_POLL_RPC:$theUrl PARAMS:$params")
-  }
-  
-  val xmlHttp = XMLHttpRequest()
-  xmlHttp.onreadystatechange = {
-    if (xmlHttp.readyState == 4.toShort() && xmlHttp.status == 200.toShort()){
-      if(MDS.logging){
-        MDS.log("RESPONSE:"+xmlHttp.responseText);
+      if (callback != null) {
+        response.json().then(callback)
       }
-      
-      callback.invoke(JSON.parse(xmlHttp.responseText))
     }
   }
-  xmlHttp.addEventListener("error", {
-    MDS.log("Error Polling - reconnect in 10s")
-    window.setTimeout({PollListener()}, 10000)
-  });
-  xmlHttp.open("POST", theUrl, true) // true for asynchronous
-  xmlHttp.overrideMimeType("text/plain; charset=UTF-8")
-  xmlHttp.send(encodeURIComponent(params))
 }
+fun httpPostAsyncPoll(url: String, params: String, callback: Callback = null) {
+  self.fetch(
+    url,
+    RequestInit("POST", body = encodeURIComponent(params))
+  ).catch {
+    null as Response?
+  }.then { response ->
+    if (response?.ok == true) {
+      if (MDS.logging) {
+        MDS.log("RPC:$url\nPARAMS:$params\nRESPONSE:${response.body}")
+      }
+      if (callback != null) {
+        response.json().then(callback)
+      }
+    } else {
+      MDS.log("Error Polling - reconnect in 10s")
+      self.setTimeout({PollListener()}, 10000)
+    }
+    Unit
+  }
+}
+
+//fun <T> httpPostAsyncPoll(theUrl: String, params: String, callback: ((T) -> Unit)){
+//  if(MDS.logging) {
+//    MDS.log("POST_POLL_RPC:$theUrl PARAMS:$params")
+//  }
+//
+//  val xmlHttp = XMLHttpRequest()
+//  xmlHttp.onreadystatechange = {
+//    if (xmlHttp.readyState == 4.toShort() && xmlHttp.status == 200.toShort()){
+//      if(MDS.logging){
+//        MDS.log("RESPONSE:"+xmlHttp.responseText);
+//      }
+//      callback.invoke(JSON.parse(xmlHttp.responseText))
+//    }
+//  }
+//  xmlHttp.addEventListener("error", {
+//    MDS.log("Error Polling - reconnect in 10s")
+//    window.setTimeout({PollListener()}, 10000)
+//  });
+//  xmlHttp.open("POST", theUrl, true) // true for asynchronous
+//  xmlHttp.overrideMimeType("text/plain; charset=UTF-8")
+//  xmlHttp.send(encodeURIComponent(params))
+//}

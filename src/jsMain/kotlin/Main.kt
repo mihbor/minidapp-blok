@@ -39,9 +39,8 @@ val json = Json {
 val tokens = mutableStateMapOf<String, Token>()
 
 fun main() {
-
-  init {
-    val uid = URLSearchParams(window.location.search).get("uid")
+  
+  init { uid ->
     val searchParam = URLSearchParams(window.location.search).get("search")
     var isSearching by mutableStateOf(!searchParam.isNullOrBlank())
     val blocks = mutableStateListOf<Block>()
@@ -51,9 +50,8 @@ fun main() {
       initMinima(uid) { block -> blocks += block }
       createSQL()
       tokens.putAll(getTokens().associateBy { it.tokenid })
+      populateBlocks(selectLatest(100), blocks)
     }
-
-    populateBlocks(selectLatest(100), blocks)
 
     renderComposable(rootElementId = "root") {
       console.log("isSearching: $isSearching")
@@ -63,19 +61,20 @@ fun main() {
   }
 }
 
-fun init(block: () -> Unit) {
+fun init(block: (String?) -> Unit) {
   try {
+    val uid = URLSearchParams(window.location.search).get("uid")
     window.addEventListener("load", {
       window.navigator.serviceWorker.getRegistrations().then{ registrations ->
         for(registration in registrations) {
           registration.unregister()
         }
       }
-      window.navigator.serviceWorker.register("minidapp-blockexplorer-kotlin-compose.js")
+      window.navigator.serviceWorker.register("minidapp-blok.js?uid=$uid")
         .then { console.log("Service worker registered") }
         .catch { console.error("Service worker registration failed: $it") }
     })
-    block.invoke()
+    block.invoke(uid)
   } catch (t: Throwable) {
     service()
   }
@@ -90,8 +89,8 @@ fun populateBlocks(sql: String, blocks: SnapshotStateList<Block>) {
   try {
     MDS.sql(sql) {
       if (it.status) {
-        if (it.response.status && it.response.rows != null) {
-          blocks += (it.response.rows as Array<dynamic>)
+        if (it.rows != null) {
+          blocks += (it.rows as Array<dynamic>)
             .map { it.TXPOW }
             .map(::decodeURIComponent)
             .map{ JSON.parse<dynamic>(it) }
