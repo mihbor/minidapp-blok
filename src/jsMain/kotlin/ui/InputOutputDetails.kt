@@ -24,17 +24,17 @@ fun InputOutputDetails(it: Coin) {
     }
     Tr {
       Td { Text("miniaddress") }
-      Td { Text(it.miniaddress) }
+      Td { Text(it.miniAddress) }
     }
     Tr {
       Td { Text("token") }
       Td {
-        TokenName(it.tokenid, tokens)
+        TokenName(it.tokenId, tokens)
       }
     }
     Tr {
       Td { Text("amount") }
-      Td { Text(it.tokenamount.toPlainString()) }
+      Td { Text(it.tokenAmount.toPlainString()) }
     }
   }
 }

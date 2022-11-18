@@ -4,7 +4,7 @@ import kotlinx.browser.window
 import org.w3c.dom.WindowOrWorkerGlobalScope
 import org.w3c.fetch.RequestInit
 import org.w3c.fetch.Response
-import self
+import kotlin.Result.Companion.success
 import kotlin.coroutines.suspendCoroutine
 import kotlin.js.Date
 
@@ -32,10 +32,11 @@ object MDS {
   /**
    * Minima Startup - with the callback function used for all Minima messages
    */
-  suspend fun init(minidappuid: String, host: String, port: Int, callback: Callback = null) {
+  
+  fun init(minidappuid: String, host: String, port: Int, callback: Callback = null) {
     this.minidappuid = minidappuid
     log("Initialising MDS [$minidappuid]")
-  
+    
     mainhost 	= "https://$host:$port/"
     log("MDS MAINHOST : "+ mainhost)
     
@@ -82,7 +83,7 @@ object MDS {
   
   suspend fun cmd(miniFunc: String) = suspendCoroutine<dynamic> { cont ->
     cmd(miniFunc) { response ->
-      cont.resumeWith(Result.success(response))
+      cont.resumeWith(success(response))
     }
   }
   
@@ -95,7 +96,7 @@ object MDS {
   
   suspend fun sql(miniFunc: String) = suspendCoroutine<dynamic> { cont ->
     sql(miniFunc) { response ->
-      cont.resumeWith(Result.success(response))
+      cont.resumeWith(success(response))
     }
   }
   
@@ -176,8 +177,8 @@ fun httpPostAsync(url: String, params: String, callback: Callback = null) {
     RequestInit("POST", body = encodeURIComponent(params))
   ).catch {
     MDS.log("httpPostAsync failed: ${it.message} ${it.cause}")
-    null as Response?
-  }.then { response ->
+    null
+  }.then { response: Response? ->
     if(response?.ok == true) {
       if (MDS.logging) {
         MDS.log("RPC:$url\nPARAMS:$params\nRESPONSE:${response.body}")
@@ -196,8 +197,8 @@ fun httpPostAsyncPoll(url: String, params: String, callback: Callback = null) {
     RequestInit("POST", body = encodeURIComponent(params))
   ).catch {
     MDS.log("httpPostAsyncPoll failed: ${it.message} ${it.cause}")
-    null as Response?
-  }.then { response ->
+    null
+  }.then { response: Response? ->
     if (response?.ok == true) {
       if (MDS.logging) {
         MDS.log("RPC:$url\nPARAMS:$params\nRESPONSE:${response.body}")
@@ -207,7 +208,7 @@ fun httpPostAsyncPoll(url: String, params: String, callback: Callback = null) {
       }
     } else {
       MDS.log("Error Polling - reconnect in 10s")
-      self.setTimeout({PollListener()}, 10000)
+      self.setTimeout({ PollListener() }, 10000)
     }
     Unit
   }

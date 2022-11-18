@@ -49,7 +49,7 @@ fun main() {
     scope.launch {
       initMinima(uid) { block -> blocks += block }
       createSQL()
-      tokens.putAll(getTokens().associateBy { it.tokenid })
+      tokens.putAll(getTokens().associateBy { it.tokenId })
       populateBlocks(selectLatest(100), blocks)
     }
 

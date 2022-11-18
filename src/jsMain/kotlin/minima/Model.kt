@@ -11,46 +11,57 @@ import kotlinx.serialization.json.*
 
 @Serializable
 data class Balance(
-  val tokenid: String,
+  @JsonNames("tokenid")
+  val tokenId: String,
   @JsonNames("token")
   val _token: JsonElement,
 //  val total: String,
   val confirmed: BigDecimal,
   val unconfirmed: BigDecimal,
   val sendable: BigDecimal,
-  val coins: Int
+  @JsonNames("coins")
+  val _coins: String
 ) {
   val tokenName get() = if (_token is JsonPrimitive) _token.jsonPrimitive.content else _token.jsonString("name")
   val tokenUrl get() = _token.jsonString("url")
+  val coins get() = _coins.toInt()
 }
 
 @Serializable
 data class Token(
-  val tokenid: String,
+  @JsonNames("tokenid")
+  val tokenId: String,
   @JsonNames("name")
   val _name: JsonElement,
   val total: BigDecimal,
   val decimals: Int,
   val script: String? = null,
-  val coinid: String? = null,
-  val totalamount: BigDecimal? = null,
+  @JsonNames("coinid")
+  val coinId: String? = null,
+  @JsonNames("tokenamount")
+  val totalAmount: BigDecimal? = null,
   @JsonNames("scale")
   val _scale: JsonPrimitive
 ) {
   val name get() = if(_name is JsonPrimitive) _name.jsonPrimitive.content else _name.jsonString("name")
-  val url get() = _name.jsonString("name")
+  val url get() = _name.jsonString("url")
   val scale get() = if (_scale.isString) _scale.content.toInt() else _scale.int
 }
 
 @Serializable
 data class Coin(
   val address: String,
-  val miniaddress: String,
+  @JsonNames("miniaddress")
+  val miniAddress: String,
   val amount: BigDecimal,
-  val tokenamount: BigDecimal = amount,
-  val coinid: String,
-  val storestate: Boolean,
-  val tokenid: String,
+  @JsonNames("tokenamount")
+  val tokenAmount: BigDecimal = amount,
+  @JsonNames("coinid")
+  val coinId: String,
+  @JsonNames("storestate")
+  val storeState: Boolean,
+  @JsonNames("tokenid")
+  val tokenId: String,
   val created: String,
   val state: List<State>
 )
@@ -60,4 +71,10 @@ data class State(
   val port: Int,
   val type: Int,
   val data: String
+)
+
+data class Output(
+  val address: String,
+  val amount: BigDecimal,
+  val tokenId: String
 )
