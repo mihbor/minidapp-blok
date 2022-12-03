@@ -1,16 +1,24 @@
+val bignumVersion = "0.3.7"
+
 plugins {
     kotlin("multiplatform") version "1.7.20"
     kotlin("plugin.serialization") version "1.7.20"
     id("org.jetbrains.compose") version "1.2.1"
 }
 
-group = "org.example"
+group = "ltd.mbor.minima.dapp"
 version = "1.0-SNAPSHOT"
 
 repositories {
+    google()
     mavenCentral()
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
-    google()
+    maven("https://maven.pkg.github.com/mihbor/MinimaK") {
+        credentials {
+            username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
+            password = project.findProperty("gpr.key") as String? ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
 }
 
 kotlin {
@@ -30,8 +38,10 @@ kotlin {
                 implementation(compose.runtime)
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
-                implementation("com.ionspin.kotlin:bignum:0.3.7")
-                implementation("com.ionspin.kotlin:bignum-serialization-kotlinx:0.3.7")
+                implementation("com.ionspin.kotlin:bignum:$bignumVersion")
+                implementation("com.ionspin.kotlin:bignum-serialization-kotlinx:$bignumVersion")
+    
+                implementation("ltd.mbor:minimak:0.1-SNAPSHOT")
             }
         }
     }

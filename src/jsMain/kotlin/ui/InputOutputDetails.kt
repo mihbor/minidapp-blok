@@ -2,8 +2,8 @@ package ui
 
 import androidx.compose.runtime.Composable
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
-import minima.Coin
-import minima.Token
+import ltd.mbor.minimak.Coin
+import ltd.mbor.minimak.Token
 import org.jetbrains.compose.web.dom.Table
 import org.jetbrains.compose.web.dom.Td
 import org.jetbrains.compose.web.dom.Text

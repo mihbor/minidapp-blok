@@ -4,8 +4,10 @@ import Block
 import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromDynamic
-import minima.MDS
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
+import ltd.mbor.minimak.MDS
 import org.jetbrains.compose.web.attributes.cols
 import org.jetbrains.compose.web.attributes.colspan
 import org.jetbrains.compose.web.attributes.rows
@@ -14,7 +16,7 @@ import org.jetbrains.compose.web.dom.*
 import scope
 
 var showJson by mutableStateOf(false)
-val txnCache = mutableStateMapOf<String, dynamic>()
+val txnCache = mutableStateMapOf<String, JsonElement?>()
 
 @Composable
 fun BlockDetails(block: Block) {
@@ -54,7 +56,7 @@ fun BlockDetails(block: Block) {
     if (block.transactionCount > 0) Tr {
       Td()
       Td {
-        val transactions = Json.decodeFromDynamic<Array<String>>(block.txpow.body.txnlist)
+        val transactions = Json.decodeFromJsonElement<List<String>>(block.txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!)
         transactions.forEach { txnId ->
           Hr()
           Div({
@@ -64,8 +66,8 @@ fun BlockDetails(block: Block) {
                 selected = txnId
                 if (!txnCache.containsKey(txnId)) scope.launch {
                   console.log("caching txn $txnId")
-                  val txnpow = MDS.cmd("txpow txpowid:$txnId")
-                  txnCache.put(txnId, txnpow.response)
+                  val txnpow = MDS.cmd("txpow txpowid:$txnId")!!
+                  txnCache.put(txnId, txnpow.jsonObject["response"])
                 }
               }
               else selected = null
@@ -97,7 +99,7 @@ fun BlockDetails(block: Block) {
       }
       Td {
         if (showJson) {
-          TextArea(JSON.stringify(block.txpow, null, 2)) {
+          TextArea(block.txpow.toString()) {
             cols(150)
             rows(20)
           }

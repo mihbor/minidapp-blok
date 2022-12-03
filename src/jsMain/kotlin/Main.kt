@@ -1,18 +1,14 @@
-
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import com.ionspin.kotlin.bignum.decimal.toBigDecimal
-import com.ionspin.kotlin.bignum.serialization.kotlinx.bigdecimal.bigDecimalHumanReadableSerializerModule
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromDynamic
-import minima.MDS
-import minima.Token
-import minima.decodeURIComponent
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.*
+import ltd.mbor.minimak.*
 import org.jetbrains.compose.web.renderComposable
 import org.w3c.dom.url.URLSearchParams
 import ui.BlockList
@@ -27,14 +23,11 @@ data class Block(
   val nonce: BigDecimal,
   val superBlockLevel: Byte,
   val parentHash: String,
-  val txpow: dynamic
+  val txpow: JsonElement
 )
 
 val scope = MainScope()
-
-val json = Json {
-  serializersModule = bigDecimalHumanReadableSerializerModule
-}
+external fun decodeURIComponent(encodedURI: String): String
 
 val tokens = mutableStateMapOf<String, Token>()
 
@@ -49,7 +42,7 @@ fun main() {
     scope.launch {
       initMinima(uid) { block -> blocks += block }
       createSQL()
-      tokens.putAll(getTokens().associateBy { it.tokenId })
+      tokens.putAll(MDS.getTokens().associateBy { it.tokenId })
       populateBlocks(selectLatest(100), blocks)
     }
 
@@ -80,43 +73,35 @@ fun init(block: (String?) -> Unit) {
   }
 }
 
-suspend fun getTokens(): Array<Token> {
-  val tokens = MDS.cmd("tokens")
-  return json.decodeFromDynamic(tokens.response)
-}
-
-fun populateBlocks(sql: String, blocks: SnapshotStateList<Block>) {
+suspend fun populateBlocks(sql: String, blocks: SnapshotStateList<Block>) {
   try {
-    MDS.sql(sql) {
-      if (it.status) {
-        if (it.rows != null) {
-          blocks += (it.rows as Array<dynamic>)
-            .map { it.TXPOW }
-            .map(::decodeURIComponent)
-            .map{ JSON.parse<dynamic>(it) }
-            .map(::mapTxPoW)
-        } else {
-          throw Error("1. Fetching from sql failed.")
-        }
-      } else {
-        throw Error("2. Fetching from sql failed.")
-      }
+    val sql = MDS.sql(sql)
+    if (sql?.jsonBoolean("status") == true) {
+      sql.jsonObject["rows"]?.let {
+        blocks += it.jsonArray
+          .map { it.jsonString("TXPOW")!! }
+          .map(::decodeURIComponent)
+          .map{ json.decodeFromString<JsonElement>(it) }
+          .map(::mapTxPoW)
+      } ?: throw Error("1. Fetching from sql failed.")
+    } else {
+      throw Error("2. Fetching from sql failed.")
     }
   } catch(err: Error) {
-    MDS.log(err.toString())
+    log(err.toString())
   }
 }
 
 suspend fun initMinima(uid: String?, consumer: (Block) -> Unit) {
   
-  MDS.init(uid ?: "0x0", window.location.hostname, 9003){
+  MDS.init(uid ?: "0x0", window.location.hostname, 9004){
     val msg = it
-    when(msg.event) {
+    when(msg.jsonString("event")) {
       "inited" -> console.log("Connected to Minima.")
       "NEWBLOCK" -> {
-        val txpow = msg.data.txpow
-        console.log("isBlock: ${txpow.isblock}")
-        if (txpow.isblock) {
+        val txpow = msg.jsonObject["data"]!!.jsonObject["txpow"]!!
+        console.log("isBlock: ${txpow.jsonBoolean("isblock")}")
+        if (txpow.jsonBoolean("isblock")!!) {
           consumer.invoke(mapTxPoW(txpow))
         }
       }
@@ -124,14 +109,17 @@ suspend fun initMinima(uid: String?, consumer: (Block) -> Unit) {
   }
 }
 
-fun mapTxPoW(txpow: dynamic) = Block(
-  hash = txpow.txpowid,
-  number = (txpow.header.block as String).toLong(),
-  transactionCount = txpow.body.txnlist.length,
-  timestamp = Instant.fromEpochMilliseconds((txpow.header.timemilli as String).toLong()),
-  size = txpow.size,
-  nonce = (txpow.header.nonce as String).toBigDecimal(),
-  superBlockLevel = txpow.superblock,
-  parentHash = txpow.header.superparents[0].parent,
-  txpow
-)
+fun mapTxPoW(txpow: JsonElement): Block {
+  val header = txpow.jsonObject["header"]!!
+  return Block(
+    hash = txpow.jsonString("txpowid")!!,
+    number = header.jsonString("block")!!.toLong(),
+    transactionCount = txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!.jsonArray.size,
+    timestamp = Instant.fromEpochMilliseconds(header.jsonString("timemilli")!!.toLong()),
+    size = txpow.jsonObject["size"]!!.jsonPrimitive.long,
+    nonce = header.jsonString("nonce")!!.toBigDecimal(),
+    superBlockLevel = txpow.jsonObject["superblock"]!!.jsonPrimitive.int.toByte(),
+    parentHash = header.jsonObject["superparents"]!!.jsonArray[0].jsonString("parent")!!,
+    txpow
+  )
+}

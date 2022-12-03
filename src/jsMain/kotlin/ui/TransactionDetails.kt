@@ -1,9 +1,10 @@
 package ui
 
 import androidx.compose.runtime.Composable
-import kotlinx.serialization.json.decodeFromDynamic
-import minima.Coin
-import minima.json
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonObject
+import ltd.mbor.minimak.Coin
+import ltd.mbor.minimak.json
 import org.jetbrains.compose.web.dom.H5
 import org.jetbrains.compose.web.dom.Hr
 import org.jetbrains.compose.web.dom.Text
@@ -11,10 +12,10 @@ import org.jetbrains.compose.web.dom.Text
 @Composable
 fun TransactionDetails(txnId: String) {
 
-  if (txnCache.containsKey(txnId)) {
-    val transaction = txnCache[txnId].body.txn
-    val inputs = json.decodeFromDynamic<Array<Coin>>(transaction.inputs)
-    val outputs = json.decodeFromDynamic<Array<Coin>>(transaction.outputs)
+  txnCache[txnId]?.let {
+    val transaction = it.jsonObject["body"]!!.jsonObject["txn"]!!
+    val inputs = json.decodeFromJsonElement<List<Coin>>(transaction.jsonObject["inputs"]!!)
+    val outputs = json.decodeFromJsonElement<List<Coin>>(transaction.jsonObject["outputs"]!!)
 
     H5 { Text("Inputs") }
     Hr()

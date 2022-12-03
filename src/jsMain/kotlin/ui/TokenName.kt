@@ -1,7 +1,7 @@
 package ui
 
 import androidx.compose.runtime.Composable
-import minima.Token
+import ltd.mbor.minimak.Token
 import org.jetbrains.compose.web.css.height
 import org.jetbrains.compose.web.css.px
 import org.jetbrains.compose.web.css.width
