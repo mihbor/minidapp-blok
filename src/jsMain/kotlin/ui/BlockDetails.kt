@@ -8,6 +8,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import ltd.mbor.minimak.MDS
+import ltd.mbor.minimak.getTransactions
 import org.jetbrains.compose.web.attributes.cols
 import org.jetbrains.compose.web.attributes.colspan
 import org.jetbrains.compose.web.attributes.rows
@@ -66,8 +67,8 @@ fun BlockDetails(block: Block) {
                 selected = txnId
                 if (!txnCache.containsKey(txnId)) scope.launch {
                   console.log("caching txn $txnId")
-                  val txnpow = MDS.cmd("txpow txpowid:$txnId")!!
-                  txnCache.put(txnId, txnpow.jsonObject["response"])
+                  val txnpow = MDS.getTransactions(transactionId = txnId)!!
+                  txnCache.put(txnId, txnpow)
                 }
               }
               else selected = null

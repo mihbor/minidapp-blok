@@ -52,3 +52,7 @@ tasks.register<Zip>("minidappDistribution") {
     destinationDirectory.set(layout.buildDirectory.dir("minidapp"))
     from(layout.buildDirectory.dir("distributions"))
 }
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor(1, "hours")
+}
