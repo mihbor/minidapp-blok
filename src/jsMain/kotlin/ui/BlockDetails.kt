@@ -3,12 +3,14 @@ package ui
 import Block
 import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import ltd.mbor.minimak.MDS
-import ltd.mbor.minimak.getTransactions
+import ltd.mbor.minimak.getTxPoW
+import ltd.mbor.minimak.json
 import org.jetbrains.compose.web.attributes.cols
 import org.jetbrains.compose.web.attributes.colspan
 import org.jetbrains.compose.web.attributes.rows
@@ -67,7 +69,7 @@ fun BlockDetails(block: Block) {
                 selected = txnId
                 if (!txnCache.containsKey(txnId)) scope.launch {
                   console.log("caching txn $txnId")
-                  val txnpow = MDS.getTransactions(transactionId = txnId)!!
+                  val txnpow = MDS.getTxPoW(txnId)!!
                   txnCache.put(txnId, txnpow)
                 }
               }
@@ -100,7 +102,7 @@ fun BlockDetails(block: Block) {
       }
       Td {
         if (showJson) {
-          TextArea(block.txpow.toString()) {
+          TextArea(json.encodeToString(block.txpow)) {
             cols(150)
             rows(20)
           }

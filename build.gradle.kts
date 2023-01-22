@@ -41,7 +41,7 @@ kotlin {
                 implementation("com.ionspin.kotlin:bignum:$bignumVersion")
                 implementation("com.ionspin.kotlin:bignum-serialization-kotlinx:$bignumVersion")
     
-                implementation("ltd.mbor:minimak:0.1-SNAPSHOT")
+                implementation("ltd.mbor:minimak:0.3-SNAPSHOT")
             }
         }
     }

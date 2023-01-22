@@ -79,7 +79,7 @@ suspend fun populateBlocks(sql: String, blocks: SnapshotStateList<Block>) {
     if (sql?.jsonBoolean("status") == true) {
       sql.jsonObject["rows"]?.let {
         blocks += it.jsonArray
-          .map { it.jsonString("TXPOW")!! }
+          .map { it.jsonString("TXPOW") }
           .map(::decodeURIComponent)
           .map{ json.decodeFromString<JsonElement>(it) }
           .map(::mapTxPoW)
@@ -94,14 +94,14 @@ suspend fun populateBlocks(sql: String, blocks: SnapshotStateList<Block>) {
 
 suspend fun initMinima(uid: String?, consumer: (Block) -> Unit) {
   
-  MDS.init(uid ?: "0x0", window.location.hostname, 9004){
+  MDS.init(uid ?: "0x00", window.location.hostname, 9004){
     val msg = it
     when(msg.jsonString("event")) {
       "inited" -> console.log("Connected to Minima.")
       "NEWBLOCK" -> {
         val txpow = msg.jsonObject["data"]!!.jsonObject["txpow"]!!
         console.log("isBlock: ${txpow.jsonBoolean("isblock")}")
-        if (txpow.jsonBoolean("isblock")!!) {
+        if (txpow.jsonBoolean("isblock")) {
           consumer.invoke(mapTxPoW(txpow))
         }
       }
@@ -112,14 +112,14 @@ suspend fun initMinima(uid: String?, consumer: (Block) -> Unit) {
 fun mapTxPoW(txpow: JsonElement): Block {
   val header = txpow.jsonObject["header"]!!
   return Block(
-    hash = txpow.jsonString("txpowid")!!,
-    number = header.jsonString("block")!!.toLong(),
+    hash = txpow.jsonString("txpowid"),
+    number = header.jsonString("block").toLong(),
     transactionCount = txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!.jsonArray.size,
-    timestamp = Instant.fromEpochMilliseconds(header.jsonString("timemilli")!!.toLong()),
+    timestamp = Instant.fromEpochMilliseconds(header.jsonString("timemilli").toLong()),
     size = txpow.jsonObject["size"]!!.jsonPrimitive.long,
-    nonce = header.jsonString("nonce")!!.toBigDecimal(),
+    nonce = header.jsonString("nonce").toBigDecimal(),
     superBlockLevel = txpow.jsonObject["superblock"]!!.jsonPrimitive.int.toByte(),
-    parentHash = header.jsonObject["superparents"]!!.jsonArray[0].jsonString("parent")!!,
+    parentHash = header.jsonObject["superparents"]!!.jsonArray[0].jsonString("parent"),
     txpow
   )
 }

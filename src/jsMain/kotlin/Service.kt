@@ -30,7 +30,7 @@ suspend fun addTxPoW(txpow: JsonElement) {
       log("$appName: Transaction at height: $txPoWHeight with size: $txPoWSize is too big for database column.")
     } else {
       val isBlock = if (txpow.jsonBoolean("isblock") == true) 1 else 0
-      val sqlResult = MDS.sql(insertBlock(txpowEncoded, txPoWHeight, txpow.jsonString("txpowid")!!, isBlock, header.jsonObject["timemilli"]!!.jsonPrimitive.long, txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!.jsonArray.size))!!
+      val sqlResult = MDS.sql(insertBlock(txpowEncoded, txPoWHeight, txpow.jsonString("txpowid"), isBlock, header.jsonObject["timemilli"]!!.jsonPrimitive.long, txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!.jsonArray.size))!!
       if (sqlResult.jsonBoolean("status") == true) {
         log("$appName: timemilli ${header.jsonObject["timemilli"]?.jsonPrimitive?.long}")
         log("TxPoW Added To SQL Table... ")

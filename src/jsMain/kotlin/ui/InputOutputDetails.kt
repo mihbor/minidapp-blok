@@ -1,18 +1,12 @@
 package ui
 
 import androidx.compose.runtime.Composable
-import com.ionspin.kotlin.bignum.decimal.BigDecimal
 import ltd.mbor.minimak.Coin
-import ltd.mbor.minimak.Token
 import org.jetbrains.compose.web.dom.Table
 import org.jetbrains.compose.web.dom.Td
 import org.jetbrains.compose.web.dom.Text
 import org.jetbrains.compose.web.dom.Tr
 import tokens
-
-infix fun BigDecimal.toToken(token: Token?) = this * BigDecimal.TEN.pow(token?.scale ?: 0)
-
-infix fun String.toToken(token: Token?) = BigDecimal.parseString(this).toToken(token).toPlainString()
 
 @Composable
 fun InputOutputDetails(it: Coin) {
