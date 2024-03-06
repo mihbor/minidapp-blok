@@ -6,7 +6,6 @@ import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.*
 import ltd.mbor.minimak.*
 import org.jetbrains.compose.web.renderComposable
@@ -41,7 +40,7 @@ fun main() {
 
     scope.launch {
       initMinima(uid) { block -> blocks += block }
-      createSQL()
+      MDS.createSQL()
       tokens.putAll(MDS.getTokens().associateBy { it.tokenId })
       populateBlocks(selectLatest(100), blocks)
     }
@@ -57,19 +56,19 @@ fun main() {
 fun init(block: (String?) -> Unit) {
   try {
     val uid = URLSearchParams(window.location.search).get("uid")
-    window.addEventListener("load", {
-      window.navigator.serviceWorker.getRegistrations().then{ registrations ->
-        for(registration in registrations) {
-          registration.unregister()
-        }
-      }
-      window.navigator.serviceWorker.register("minidapp-blok.js?uid=$uid")
-        .then { console.log("Service worker registered") }
-        .catch { console.error("Service worker registration failed: $it") }
-    })
+//    window.addEventListener("load", {
+//      window.navigator.serviceWorker.getRegistrations().then{ registrations ->
+//        for(registration in registrations) {
+//          registration.unregister()
+//        }
+//      }
+//      window.navigator.serviceWorker.register("minidapp-blok.js?uid=$uid")
+//        .then { console.log("Service worker registered") }
+//        .catch { console.error("Service worker registration failed: $it") }
+//    })
     block.invoke(uid)
   } catch (t: Throwable) {
-    service()
+//    service()
   }
 }
 
