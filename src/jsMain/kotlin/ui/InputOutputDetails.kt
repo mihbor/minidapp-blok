@@ -27,8 +27,20 @@ fun InputOutputDetails(it: Coin) {
       }
     }
     Tr {
+      Td { Text("tokenId") }
+      Td {
+        Text(it.tokenId)
+      }
+    }
+    Tr {
       Td { Text("amount") }
       Td { Text(it.tokenAmount.toPlainString()) }
+    }
+    Tr {
+      Td { Text("coinId") }
+      Td {
+        Text(it.coinId)
+      }
     }
   }
 }

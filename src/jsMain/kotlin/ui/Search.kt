@@ -19,7 +19,7 @@ import org.w3c.dom.PopStateEvent
 import org.w3c.dom.url.URL
 import populateBlocks
 import scope
-import search
+import searchBlocksAndTransactions
 
 @Composable
 fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching: (Boolean) -> Unit) {
@@ -36,7 +36,7 @@ fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching
   fun updateResults(search: String) {
     scope.launch {
       results.clear()
-      populateBlocks(search(search), results)
+      populateBlocks(searchBlocksAndTransactions(search), results)
       setSearching(true)
     }
   }

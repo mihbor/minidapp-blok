@@ -9,7 +9,7 @@ kotlin {
   sourceSets {
     val jsMain by getting {
       dependencies {
-        api("ltd.mbor:minimak:0.4.1-SNAPSHOT")
+        api("ltd.mbor:minimak:0.4.1")
       }
     }
   }

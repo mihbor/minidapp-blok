@@ -5,7 +5,6 @@ import ltd.mbor.minimak.jsonString
 import org.w3c.dom.url.URLSearchParams
 import org.w3c.workers.ServiceWorkerGlobalScope
 
-
 external val self: ServiceWorkerGlobalScope
 
 fun service() {

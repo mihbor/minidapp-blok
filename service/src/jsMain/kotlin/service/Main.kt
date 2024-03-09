@@ -14,6 +14,10 @@ fun main() {
   js("""(function(global) {
     global.console = {
       log: function(msg) { MDS.log(msg) },
+      trace: function(msg) { MDS.log(msg) },
+      debug: function(msg) { MDS.log(msg) },
+      info: function(msg) { MDS.log(msg) },
+      warn: function(msg) { MDS.log(msg) },
       error: function(msg) { MDS.log(msg) }
     }
 })(this);""")

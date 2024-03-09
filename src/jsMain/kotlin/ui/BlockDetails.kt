@@ -59,7 +59,7 @@ fun BlockDetails(block: Block) {
     if (block.transactionCount > 0) Tr {
       Td()
       Td {
-        val transactions = Json.decodeFromJsonElement<List<String>>(block.txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!)
+        val transactions: List<String> = Json.decodeFromJsonElement(block.txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!)
         transactions.forEach { txnId ->
           Hr()
           Div({

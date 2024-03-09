@@ -7,8 +7,8 @@ const val appName = "BloK"
 const val txPoWMaxSize = 16000
 
 suspend fun MdsApi.createSQL() {
-  log("$INIT_SQL; $INDEX_HASH; $INDEX_HEIGHT")
-  val sqlResult = sql("$INIT_SQL; $INDEX_HASH; $INDEX_HEIGHT")
+  log(INIT_SQL)
+  val sqlResult = sql(INIT_SQL)
   if (sqlResult?.jsonBoolean("status") != true) {
     log("$appName : ERROR in SQL call!")
     log("$appName : ${JSON.stringify(sqlResult)}")
@@ -25,25 +25,43 @@ suspend fun MdsApi.addTxPoW(txpow: JsonElement) {
 //    txpow.body.witness.signatures = null
 //    txpow.body.witness.mmrproofs = null
     log("addTxPoW")
-    val txpowEncoded = encodeURIComponent(json.encodeToString(txpow))
-    log("txpowEncoded")
-    if (txPoWSize > txPoWMaxSize) {
+    val txpowEncoded = if (txPoWSize > txPoWMaxSize) {
       log("$appName: Transaction at height: $txPoWHeight with size: $txPoWSize is too big for database column.")
-    } else {
-      val isBlock = if (txpow.jsonBoolean("isblock") == true) 1 else 0
-      val sqlResult = sql(
-        insertBlock(
-          txpowEncoded,
-          txPoWHeight,
-          txpow.jsonString("txpowid"),
-          isBlock,
-          header.jsonObject["timemilli"]!!.jsonPrimitive.long,
-          txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!.jsonArray.size
-        )
+      null
+    } else encodeURIComponent(json.encodeToString(txpow))
+    val isBlock = if (txpow.jsonBoolean("isblock") == true) 1 else 0
+    val txIds = txpow.jsonObject("body").jsonObject("txnlist").jsonArray
+    val blockId = txpow.jsonString("txpowid")
+    val sqlResult = sql(
+      insertBlockSql(
+        txpowEncoded,
+        txPoWHeight,
+        blockId,
+        isBlock,
+        header.jsonObject("timemilli").jsonPrimitive.long,
+        txIds.size
       )
-      if (sqlResult?.jsonBoolean("status") == true) {
-        log("$appName: timemilli ${header.jsonObject["timemilli"]?.jsonPrimitive?.long}")
-        log("TxPoW Added To SQL Table... ")
+    )
+    if (sqlResult?.jsonBoolean("status") == true) {
+      log("inserted block $blockId")
+    }
+    txIds.forEach {
+      log("get txpow by id $it")
+      getTxPoW(it.jsonPrimitive.content)?.toTransaction()?.let { tx ->
+        log("inserting transaction ${tx.transactionId}")
+        val sqlResult = sql(
+          insertTransactionSql(
+            tx.transactionId,
+            blockId,
+            encodeURIComponent(json.encodeToString(tx.header)),
+            encodeURIComponent(json.encodeToString(tx.inputs)),
+            encodeURIComponent(json.encodeToString(tx.outputs)),
+            encodeURIComponent(json.encodeToString(tx.state))
+          )
+        )
+        if (sqlResult?.jsonBoolean("status") == true) {
+          log("inserted transaction ${tx.transactionId}")
+        }
       }
     }
   }
