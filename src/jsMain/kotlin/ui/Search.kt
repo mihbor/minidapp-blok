@@ -9,12 +9,8 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import kotlinx.browser.window
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.web.attributes.InputType
-import org.jetbrains.compose.web.css.px
-import org.jetbrains.compose.web.css.width
-import org.jetbrains.compose.web.dom.Button
-import org.jetbrains.compose.web.dom.Form
-import org.jetbrains.compose.web.dom.Input
-import org.jetbrains.compose.web.dom.Text
+import org.jetbrains.compose.web.css.*
+import org.jetbrains.compose.web.dom.*
 import org.w3c.dom.PopStateEvent
 import org.w3c.dom.url.URL
 import populateBlocks
@@ -25,6 +21,8 @@ import searchBlocksAndTransactions
 fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching: (Boolean) -> Unit) {
 
   var searchInput by mutableStateOf(searchParam ?: "")
+  var fromDate by mutableStateOf("")
+  var toDate by mutableStateOf("")
 
   fun setSearchParam(search: String?) {
     val url = URL(window.location.href)
@@ -33,10 +31,10 @@ fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching
     window.history.pushState(search, "", url.toString())
   }
 
-  fun updateResults(search: String) {
+  fun updateResults(search: String, fromDate: String? = null, toDate: String? = null) {
     scope.launch {
       results.clear()
-      populateBlocks(searchBlocksAndTransactions(search), results)
+      populateBlocks(searchBlocksAndTransactions(search, fromDate, toDate), results)
       setSearching(true)
     }
   }
@@ -61,37 +59,80 @@ fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching
       it.preventDefault()
       if (searchInput.isNotBlank()) {
         setSearchParam(searchInput)
-        updateResults(searchInput)
+        updateResults(searchInput, fromDate.takeUnless { it.isBlank() }, toDate.takeUnless { it.isBlank() })
       }
     }
   }) {
-    Input(type = InputType.Text, attrs = {
-      id("search-input")
+    Div(attrs = {
       style {
-        width(700.px)
+        display(DisplayStyle.InlineBlock)
       }
-      value(searchInput)
-      onInput {
-        searchInput = it.value
-      }
-    })
-    if (searchInput.isNotBlank()) {
-      Button(attrs = {
+    }) {
+      Input(type = InputType.Text, attrs = {
+        id("search-input")
         style {
-          width(25.px)
+          width(700.px)
         }
-        onClick {
-          it.preventDefault()
-          setSearchParam(null)
-          clearSearch()
+        value(searchInput)
+        onInput {
+          searchInput = it.value
         }
-      }) {
-        Text("X")
+      })
+      if (searchInput.isNotBlank()) {
+        Button(attrs = {
+          style {
+            width(25.px)
+          }
+          onClick {
+            it.preventDefault()
+            setSearchParam(null)
+            clearSearch()
+          }
+        }) {
+          Text("X")
+        }
+      }
+      Br()
+      Text("From date")
+      DateTimeLocalInput(fromDate, attrs = {
+        onChange { fromDate = it.value; console.log("fromDate = $fromDate") }
+      })
+      if (fromDate.isNotBlank()) {
+        Button(attrs = {
+          style {
+            width(25.px)
+          }
+          onClick {
+            it.preventDefault()
+            fromDate = ""
+          }
+        }) {
+          Text("X")
+        }
+      }
+      Text("To date")
+      DateTimeLocalInput(toDate, attrs = {
+        onChange { toDate = it.value; console.log("toDate = $toDate") }
+      })
+      if (toDate.isNotBlank()) {
+        Button(attrs = {
+          style {
+            width(25.px)
+          }
+          onClick {
+            it.preventDefault()
+            toDate = ""
+          }
+        }) {
+          Text("X")
+        }
       }
     }
     Button(attrs = {
       style {
         width(100.px)
+        height(40.px)
+        property("vertical-align", "top")
       }
     }) {
       Text("search")

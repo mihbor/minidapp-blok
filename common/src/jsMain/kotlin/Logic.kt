@@ -1,5 +1,8 @@
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import ltd.mbor.minimak.*
 
 const val appName = "BloK"
@@ -15,10 +18,11 @@ suspend fun MdsApi.createSQL() {
   }
 }
 
-suspend fun MdsApi.addTxPoW(txpow: JsonElement) {
-  val header = txpow.jsonObject["header"]!!
-  val txPoWSize = txpow.jsonObject["size"]!!.jsonPrimitive.int
-  val txPoWHeight = header.jsonObject["block"]!!.jsonPrimitive.int
+var lastBlockId: String? = null
+tailrec suspend fun MdsApi.addTxPoW(txpow: JsonElement) {
+  val block = json.decodeFromJsonElement<Block>(txpow)
+  val txPoWSize = block.size
+  val txPoWHeight = block.header.block
   if (txpow.jsonObject["body"] == null) {
     log("txpow body not found!")
   } else {
@@ -29,28 +33,28 @@ suspend fun MdsApi.addTxPoW(txpow: JsonElement) {
       log("$appName: Transaction at height: $txPoWHeight with size: $txPoWSize is too big for database column.")
       null
     } else encodeURIComponent(json.encodeToString(txpow))
-    val isBlock = if (txpow.jsonBoolean("isblock") == true) 1 else 0
-    val txIds = txpow.jsonObject("body").jsonObject("txnlist").jsonArray
-    val blockId = txpow.jsonString("txpowid")
-    val sqlResult = sql(
-      insertBlockSql(
+    val isBlock = txpow.jsonBoolean("isblock") == true
+    val txIds = block.body.txnList
+    val blockId = block.id
+    val blockResult = sql(
+      insertBlock(
+        blockId,
         txpowEncoded,
         txPoWHeight,
-        blockId,
-        isBlock,
-        header.jsonObject("timemilli").jsonPrimitive.long,
+        if (isBlock) 1 else 0,
+        block.header.timeMillis,
         txIds.size
       )
     )
-    if (sqlResult?.jsonBoolean("status") == true) {
+    if (blockResult?.jsonBoolean("status") == true) {
       log("inserted block $blockId")
     }
     txIds.forEach {
       log("get txpow by id $it")
-      getTxPoW(it.jsonPrimitive.content)?.toTransaction()?.let { tx ->
+      getTxPoW(it)?.toTransaction()?.let { tx ->
         log("inserting transaction ${tx.transactionId}")
-        val sqlResult = sql(
-          insertTransactionSql(
+        val txResult = sql(
+          insertTransaction(
             tx.transactionId,
             blockId,
             encodeURIComponent(json.encodeToString(tx.header)),
@@ -59,8 +63,23 @@ suspend fun MdsApi.addTxPoW(txpow: JsonElement) {
             encodeURIComponent(json.encodeToString(tx.state))
           )
         )
-        if (sqlResult?.jsonBoolean("status") == true) {
+        if (txResult?.jsonBoolean("status") == true) {
           log("inserted transaction ${tx.transactionId}")
+        }
+      }
+    }
+    val parentId = block.header.superParents.first().parent
+    if (parentId != lastBlockId.also { lastBlockId = blockId }) {
+      log("last block: $lastBlockId, parent $parentId")
+      val result = sql(selectBlockById(parentId))
+      if (result?.jsonBoolean("status") == true) {
+        log("selectBlockById $parentId results: ${result.jsonBoolean("results")}")
+        if (result.jsonBoolean("results")) {
+          if (result.jsonObject("rows").jsonArray.firstOrNull() == null) {
+            log("parent $parentId not found, getting from MDS")
+            val parent = getTxPoW(parentId)
+            if (parent != null) addTxPoW(parent)
+          }
         }
       }
     }

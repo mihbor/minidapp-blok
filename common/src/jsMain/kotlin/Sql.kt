@@ -21,18 +21,20 @@ const val INIT_SQL = """
   CREATE INDEX IF NOT EXISTS height_idx ON txpowlist(height DESC);
 """
 
-fun selectLatest(limit: Int = 100) = "SELECT * from txpowlist WHERE isblock = 1 ORDER BY HEIGHT DESC LIMIT $limit"
+fun selectLatest(limit: Int = 100) = "SELECT * FROM txpowlist WHERE isblock = 1 ORDER BY HEIGHT DESC LIMIT $limit"
 
-fun insertBlockSql(
+fun insertBlock(
+  id: String,
   txpow: String?,
   height: Int,
-  txpowId: String,
   isBlock: Int,
   relayed: Long,
   length: Int
-) = "INSERT INTO txpowlist VALUES (\'$txpow\', $height, '$txpowId', $isBlock, $relayed, $length)"
+) = "INSERT INTO txpowlist VALUES (\'$txpow\', $height, '$id', $isBlock, $relayed, $length)"
 
-fun insertTransactionSql(
+fun selectBlockById(id: String) = "SELECT * FROM txpowlist WHERE hash = \'$id\'"
+
+fun insertTransaction(
   id: String,
   block: String,
   header: String,
@@ -47,7 +49,7 @@ fun searchBlocks(query: String) =
 fun searchTransactions(query: String) =
   "SELECT * FROM tx WHERE id LIKE '%$query%' OR header LIKE '%$query%' OR inputs LIKE '%$query%' OR outputs LIKE '%$query%' OR state LIKE '%$query%' ORDER BY id"
 
-fun searchBlocksAndTransactions(query: String) = """
+fun searchBlocksAndTransactions(query: String, fromDate: String?, toDate: String?) = """
   SELECT * FROM txpowlist WHERE txpow LIKE '%$query%' OR hash IN(
     SELECT block FROM tx WHERE id LIKE '%$query%' OR header LIKE '%$query%' OR inputs LIKE '%$query%' OR outputs LIKE '%$query%' OR state LIKE '%$query%'
   ) ORDER BY RELAYED"""
