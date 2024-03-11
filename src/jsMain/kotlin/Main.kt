@@ -33,8 +33,11 @@ val tokens = mutableStateMapOf<String, Token>()
 fun main() {
   
   init { uid ->
-    val searchParam = URLSearchParams(window.location.search).get("search")
-    var isSearching by mutableStateOf(!searchParam.isNullOrBlank())
+    val urlParams = URLSearchParams(window.location.search)
+    val searchText = urlParams.get("searchText")
+    val searchFrom = urlParams.get("searchFrom")
+    val searchTo = urlParams.get("searchTo")
+    var isSearching by mutableStateOf(!searchText.isNullOrBlank() || !searchFrom.isNullOrBlank() || !searchTo.isNullOrBlank())
     val blocks = mutableStateListOf<Block>()
     val results = mutableStateListOf<Block>()
 
@@ -47,7 +50,7 @@ fun main() {
 
     renderComposable(rootElementId = "root") {
       console.log("isSearching: $isSearching")
-      Search(searchParam, results) { isSearching = it }
+      Search(searchText, searchFrom, searchTo, results) { isSearching = it }
       BlockList(if (isSearching) results else blocks)
     }
   }
@@ -74,9 +77,9 @@ fun init(block: (String?) -> Unit) {
 
 suspend fun populateBlocks(sql: String, blocks: SnapshotStateList<Block>) {
   try {
-    val sql = MDS.sql(sql)
-    if (sql?.jsonBoolean("status") == true) {
-      sql.jsonObject["rows"]?.let {
+    val result = MDS.sql(sql)
+    if (result?.jsonBoolean("status") == true) {
+      result.jsonObject["rows"]?.let {
         blocks += it.jsonArray
           .map { it.jsonString("TXPOW") }
           .map(::decodeURIComponent)

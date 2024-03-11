@@ -53,18 +53,22 @@ tailrec suspend fun MdsApi.addTxPoW(txpow: JsonElement) {
       log("get txpow by id $it")
       getTxPoW(it)?.toTransaction()?.let { tx ->
         log("inserting transaction ${tx.transactionId}")
-        val txResult = sql(
-          insertTransaction(
-            tx.transactionId,
-            blockId,
-            encodeURIComponent(json.encodeToString(tx.header)),
-            encodeURIComponent(json.encodeToString(tx.inputs)),
-            encodeURIComponent(json.encodeToString(tx.outputs)),
-            encodeURIComponent(json.encodeToString(tx.state))
+        try {
+          val txResult = sql(
+            insertTransaction(
+              tx.transactionId,
+              blockId,
+              encodeURIComponent(json.encodeToString(tx.header)),
+              encodeURIComponent(json.encodeToString(tx.inputs)),
+              encodeURIComponent(json.encodeToString(tx.outputs)),
+              encodeURIComponent(json.encodeToString(tx.state))
+            )
           )
-        )
-        if (txResult?.jsonBoolean("status") == true) {
-          log("inserted transaction ${tx.transactionId}")
+          if (txResult?.jsonBoolean("status") == true) {
+            log("inserted transaction ${tx.transactionId}")
+          }
+        } catch (e: Throwable) {
+          log(e.message ?: "ERROR")
         }
       }
     }

@@ -1,3 +1,4 @@
+import kotlinx.datetime.Instant
 
 const val INIT_SQL = """
   CREATE TABLE IF NOT EXISTS txpowlist (
@@ -49,7 +50,23 @@ fun searchBlocks(query: String) =
 fun searchTransactions(query: String) =
   "SELECT * FROM tx WHERE id LIKE '%$query%' OR header LIKE '%$query%' OR inputs LIKE '%$query%' OR outputs LIKE '%$query%' OR state LIKE '%$query%' ORDER BY id"
 
-fun searchBlocksAndTransactions(query: String, fromDate: String?, toDate: String?) = """
-  SELECT * FROM txpowlist WHERE txpow LIKE '%$query%' OR hash IN(
-    SELECT block FROM tx WHERE id LIKE '%$query%' OR header LIKE '%$query%' OR inputs LIKE '%$query%' OR outputs LIKE '%$query%' OR state LIKE '%$query%'
-  ) ORDER BY RELAYED"""
+fun searchBlocksAndTransactions(text: String?, fromDate: String?, toDate: String?): String {
+  val sb = StringBuilder("SELECT * FROM txpowlist ")
+  if (text != null || fromDate != null || toDate != null) sb.append("WHERE ")
+  text?.let{ sb.append(textClause(it)) }
+  fromDate?.let{
+    if (text != null) sb.append(" AND ")
+    sb.append("relayed >= ").append(Instant.parse("$it:00Z").toEpochMilliseconds())
+  }
+  toDate?.let{
+    if (text != null || fromDate != null) sb.append(" AND ")
+    sb.append("relayed <= ").append(Instant.parse("$it:59Z").toEpochMilliseconds())
+  }
+  sb.append(" ORDER BY RELAYED DESC")
+  return sb.toString()
+}
+
+fun textClause(text: String) = "txpow LIKE '%$text%' OR hash IN(${selectBlockFromTx(text)})"
+
+fun selectBlockFromTx(query: String) =
+  "SELECT block FROM tx WHERE id LIKE '%$query%' OR header LIKE '%$query%' OR inputs LIKE '%$query%' OR outputs LIKE '%$query%' OR state LIKE '%$query%'"

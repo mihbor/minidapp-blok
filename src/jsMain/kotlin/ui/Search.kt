@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import kotlinx.browser.window
 import kotlinx.coroutines.launch
+import ltd.mbor.minimak.log
 import org.jetbrains.compose.web.attributes.InputType
 import org.jetbrains.compose.web.css.*
 import org.jetbrains.compose.web.dom.*
@@ -18,20 +19,24 @@ import scope
 import searchBlocksAndTransactions
 
 @Composable
-fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching: (Boolean) -> Unit) {
+fun Search(searchText: String?, searchFrom: String?, searchTo: String?, results: SnapshotStateList<Block>, setSearching: (Boolean) -> Unit) {
 
-  var searchInput by mutableStateOf(searchParam ?: "")
-  var fromDate by mutableStateOf("")
-  var toDate by mutableStateOf("")
+  var searchInput by mutableStateOf(searchText ?: "")
+  var fromDate by mutableStateOf(searchFrom ?: "")
+  var toDate by mutableStateOf(searchTo ?: "")
 
-  fun setSearchParam(search: String?) {
+  fun setSearchParams(search: String?, fromDate: String?, toDate: String?) {
     val url = URL(window.location.href)
-    if (search != null) url.searchParams.set("search", search)
-    else url.searchParams.delete("search")
-    window.history.pushState(search, "", url.toString())
+    if (search != null) url.searchParams.set("searchText", search)
+    else url.searchParams.delete("searchText")
+    if (fromDate != null) url.searchParams.set("searchFrom", fromDate)
+    else url.searchParams.delete("searchFrom")
+    if (toDate != null) url.searchParams.set("searchTo", toDate)
+    else url.searchParams.delete("searchTo")
+    window.history.pushState(listOf(search, fromDate, toDate).map { it ?: "" }.joinToString(";"), "", url.toString())
   }
 
-  fun updateResults(search: String, fromDate: String? = null, toDate: String? = null) {
+  fun updateResults(search: String?, fromDate: String?, toDate: String?) {
     scope.launch {
       results.clear()
       populateBlocks(searchBlocksAndTransactions(search, fromDate, toDate), results)
@@ -39,28 +44,33 @@ fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching
     }
   }
 
-  fun clearSearch() {
-    searchInput = ""
-    setSearching(false)
+  fun search() {
+    log("search $searchInput, from $fromDate, to $toDate")
+    setSearchParams(searchInput.takeUnless { it.isBlank() }, fromDate.takeUnless { it.isBlank() }, toDate.takeUnless { it.isBlank() })
+    updateResults(searchInput.takeUnless { it.isBlank() }, fromDate.takeUnless { it.isBlank() }, toDate.takeUnless { it.isBlank() })
   }
 
   window.addEventListener("popstate", {
     val event = it as PopStateEvent
     if(event.state == null) {
-      clearSearch()
+      searchInput = ""
+      fromDate = ""
+      toDate = ""
+      setSearching(false)
     } else {
-      searchInput = it.state.toString()
-      updateResults(searchInput)
+      it.state.toString().split(";").let {
+        searchInput = it[0]
+        fromDate = it[1]
+        toDate = it[2]
+      }
+      updateResults(searchInput, fromDate, toDate)
     }
   })
 
   Form(attrs = {
     this.addEventListener("submit") {
       it.preventDefault()
-      if (searchInput.isNotBlank()) {
-        setSearchParam(searchInput)
-        updateResults(searchInput, fromDate.takeUnless { it.isBlank() }, toDate.takeUnless { it.isBlank() })
-      }
+      search()
     }
   }) {
     Div(attrs = {
@@ -85,8 +95,8 @@ fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching
           }
           onClick {
             it.preventDefault()
-            setSearchParam(null)
-            clearSearch()
+            searchInput = ""
+            search()
           }
         }) {
           Text("X")
@@ -105,6 +115,7 @@ fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching
           onClick {
             it.preventDefault()
             fromDate = ""
+            search()
           }
         }) {
           Text("X")
@@ -122,6 +133,7 @@ fun Search(searchParam: String?, results: SnapshotStateList<Block>, setSearching
           onClick {
             it.preventDefault()
             toDate = ""
+            search()
           }
         }) {
           Text("X")

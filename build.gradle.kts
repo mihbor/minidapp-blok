@@ -1,5 +1,3 @@
-val bignumVersion = "0.3.7"
-
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
@@ -38,12 +36,6 @@ kotlin {
         implementation(compose.web.core)
         implementation(compose.runtime)
         implementation(project(":common"))
-        implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
-        implementation("com.ionspin.kotlin:bignum:$bignumVersion")
-        implementation("com.ionspin.kotlin:bignum-serialization-kotlinx:$bignumVersion")
-
-        implementation("ltd.mbor:minimak:0.4.1-SNAPSHOT")
       }
     }
   }
