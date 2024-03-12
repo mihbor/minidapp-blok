@@ -1,16 +1,17 @@
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.ionspin.kotlin.bignum.decimal.BigDecimal
-import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
-import kotlinx.serialization.json.*
-import ltd.mbor.minimak.*
+import kotlinx.serialization.json.JsonElement
+import ltd.mbor.minimak.MDS
+import ltd.mbor.minimak.Token
+import ltd.mbor.minimak.getTokens
 import org.jetbrains.compose.web.renderComposable
 import org.w3c.dom.url.URLSearchParams
 import ui.BlockList
+import ui.Export
 import ui.Search
 
 data class Block(
@@ -42,7 +43,7 @@ fun main() {
     val results = mutableStateListOf<Block>()
 
     scope.launch {
-      initMinima(uid) { block -> blocks += block }
+      initMinima(uid) { block -> blocks.add(0, block) }
       MDS.createSQL()
       tokens.putAll(MDS.getTokens().associateBy { it.tokenId })
       populateBlocks(selectLatest(100), blocks)
@@ -51,6 +52,7 @@ fun main() {
     renderComposable(rootElementId = "root") {
       console.log("isSearching: $isSearching")
       Search(searchText, searchFrom, searchTo, results) { isSearching = it }
+      Export(if (isSearching) results else blocks)
       BlockList(if (isSearching) results else blocks)
     }
   }
@@ -73,55 +75,4 @@ fun init(block: (String?) -> Unit) {
   } catch (t: Throwable) {
 //    service()
   }
-}
-
-suspend fun populateBlocks(sql: String, blocks: SnapshotStateList<Block>) {
-  try {
-    val result = MDS.sql(sql)
-    if (result?.jsonBoolean("status") == true) {
-      result.jsonObject["rows"]?.let {
-        blocks += it.jsonArray
-          .map { it.jsonString("TXPOW") }
-          .map(::decodeURIComponent)
-          .map{ json.decodeFromString<JsonElement>(it) }
-          .map(::mapTxPoW)
-      } ?: throw Error("1. Fetching from sql failed.")
-    } else {
-      throw Error("2. Fetching from sql failed.")
-    }
-  } catch(err: Error) {
-    log(err.toString())
-  }
-}
-
-suspend fun initMinima(uid: String?, consumer: (Block) -> Unit) {
-  
-  MDS.init(uid ?: "0x00", window.location.hostname, 9004){
-    val msg = it
-    when(msg.jsonString("event")) {
-      "inited" -> console.log("Connected to Minima.")
-      "NEWBLOCK" -> {
-        val txpow = msg.jsonObject["data"]!!.jsonObject["txpow"]!!
-        console.log("isBlock: ${txpow.jsonBoolean("isblock")}")
-        if (txpow.jsonBoolean("isblock")) {
-          consumer.invoke(mapTxPoW(txpow))
-        }
-      }
-    }
-  }
-}
-
-fun mapTxPoW(txpow: JsonElement): Block {
-  val header = txpow.jsonObject["header"]!!
-  return Block(
-    hash = txpow.jsonString("txpowid"),
-    number = header.jsonString("block").toLong(),
-    transactionCount = txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!.jsonArray.size,
-    timestamp = Instant.fromEpochMilliseconds(header.jsonString("timemilli").toLong()),
-    size = txpow.jsonObject["size"]!!.jsonPrimitive.long,
-    nonce = header.jsonString("nonce").toBigDecimal(),
-    superBlockLevel = txpow.jsonObject["superblock"]!!.jsonPrimitive.int.toByte(),
-    parentHash = header.jsonObject["superparents"]!!.jsonArray[0].jsonString("parent"),
-    txpow
-  )
 }

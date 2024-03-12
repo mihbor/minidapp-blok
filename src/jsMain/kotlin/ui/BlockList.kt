@@ -14,7 +14,7 @@ fun BlockList(blocks: SnapshotStateList<Block>) {
     Thead {
       Tr {
         Td { Text("Height") }
-        Td { Text("ID") }
+        Td { Text("Hash") }
         Td { Text("Txns") }
         Td { Text("Time relayed") }
       }
