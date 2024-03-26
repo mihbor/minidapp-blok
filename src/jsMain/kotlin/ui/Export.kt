@@ -18,8 +18,14 @@ fun Export(blocks: List<Block>) {
     onClick {
       val csv = StringBuilder().appendLine("Height,Hash,Transaction Count,Time relayed,JSON")
       blocks.forEach {
-        csv.appendLine(listOf(it.number, it.hash, it.transactionCount, it.timestamp, json.encodeToString(it.txpow).replace("\n", "").replace("\"", "\"\""))
-          .joinToString("\",\"", "\"", "\""))
+        val data = listOf(
+          it.number,
+          it.hash,
+          it.transactionCount,
+          it.timestamp,
+          json.encodeToString(it.txpow).replace("\n", "").replace("\"", "\"\"")
+        )
+        csv.appendLine(data.joinToString("\",\"", "\"", "\""))
       }
       val file = File(csv.toString().toCharArray().toTypedArray(), "minima-blocks.csv", FilePropertyBag(type = "text/csv"))
       val link = document.createElement("a") as HTMLAnchorElement

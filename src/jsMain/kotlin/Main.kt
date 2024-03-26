@@ -5,12 +5,11 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonElement
-import ltd.mbor.minimak.MDS
-import ltd.mbor.minimak.Token
-import ltd.mbor.minimak.getTokens
+import ltd.mbor.minimak.*
 import org.jetbrains.compose.web.renderComposable
 import org.w3c.dom.url.URLSearchParams
 import ui.BlockList
+import ui.BurnStats
 import ui.Export
 import ui.Search
 
@@ -30,6 +29,7 @@ val scope = MainScope()
 external fun decodeURIComponent(encodedURI: String): String
 
 val tokens = mutableStateMapOf<String, Token>()
+val burn = mutableStateMapOf<String, BurnStats>()
 
 fun main() {
   
@@ -47,10 +47,12 @@ fun main() {
       MDS.createSQL()
       tokens.putAll(MDS.getTokens().associateBy { it.tokenId })
       populateBlocks(selectLatest(100), blocks)
+      burn.putAll(MDS.burn())
     }
 
     renderComposable(rootElementId = "root") {
       console.log("isSearching: $isSearching")
+      BurnStats(burn)
       Search(searchText, searchFrom, searchTo, results) { isSearching = it }
       Export(if (isSearching) results else blocks)
       BlockList(if (isSearching) results else blocks)
