@@ -33,6 +33,8 @@ val burn = mutableStateMapOf<String, BurnStats>()
 val blockStats = mutableStateMapOf<Int, BlockStats>()
 var hashRate by mutableStateOf<BigDecimal?>(null)
 
+val txnCache = mutableStateMapOf<String, JsonElement?>()
+
 fun main() {
   
   init { uid ->

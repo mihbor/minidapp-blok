@@ -5,7 +5,6 @@ import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import ltd.mbor.minimak.MDS
@@ -17,9 +16,9 @@ import org.jetbrains.compose.web.attributes.rows
 import org.jetbrains.compose.web.css.fontWeight
 import org.jetbrains.compose.web.dom.*
 import scope
+import txnCache
 
 var showJson by mutableStateOf(false)
-val txnCache = mutableStateMapOf<String, JsonElement?>()
 
 @Composable
 fun BlockDetails(block: Block) {

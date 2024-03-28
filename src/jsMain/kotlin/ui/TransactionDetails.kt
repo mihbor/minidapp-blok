@@ -5,6 +5,7 @@ import ltd.mbor.minimak.toTransaction
 import org.jetbrains.compose.web.dom.H5
 import org.jetbrains.compose.web.dom.Hr
 import org.jetbrains.compose.web.dom.Text
+import txnCache
 
 @Composable
 fun TransactionDetails(txnId: String) {
