@@ -1,8 +1,6 @@
+import kotlinx.datetime.Instant
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.*
 import ltd.mbor.minimak.*
 
 const val appName = "BloK"
@@ -36,18 +34,19 @@ tailrec suspend fun MdsApi.addTxPoW(txpow: JsonElement) {
     val isBlock = txpow.jsonBoolean("isblock") == true
     val txIds = block.body.txnList
     val blockId = block.id
+    val blockTime = block.header.timeMillis
     val blockResult = sql(
       insertBlock(
         blockId,
         txpowEncoded,
         txPoWHeight,
         if (isBlock) 1 else 0,
-        block.header.timeMillis,
+        blockTime,
         txIds.size
       )
     )
     if (blockResult?.jsonBoolean("status") == true) {
-      log("inserted block $blockId")
+      log("inserted block $blockId relayed ${Instant.fromEpochMilliseconds(blockTime)}")
     }
     txIds.forEach {
       log("get txpow by id $it")
@@ -88,4 +87,17 @@ tailrec suspend fun MdsApi.addTxPoW(txpow: JsonElement) {
       }
     }
   }
+}
+
+data class BlockStats(
+  val blockCount: Int,
+  val txCount: Int,
+)
+
+suspend fun MdsApi.getBlockStats() = listOf(1, 24, 7*24).map {
+  it to sql(selectStats(it))!!.statsResult()
+}.toMap()
+
+private fun JsonElement.statsResult() = jsonObject("rows").jsonArray.single().let {
+  BlockStats(it.jsonObject("COUNT(*)").jsonPrimitive.content.toInt(), it.jsonObject("SUM(TXNS)").jsonPrimitive.content.toInt())
 }

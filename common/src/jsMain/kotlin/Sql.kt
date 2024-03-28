@@ -70,3 +70,7 @@ fun textClause(text: String) = "txpow LIKE '%$text%' OR hash IN(${selectBlockFro
 
 fun selectBlockFromTx(query: String) =
   "SELECT block FROM tx WHERE id LIKE '%$query%' OR header LIKE '%$query%' OR inputs LIKE '%$query%' OR outputs LIKE '%$query%' OR state LIKE '%$query%'"
+
+const val SECONDS_IN_HOUR = 60 * 60
+fun selectStats(hoursBack: Int) =
+  "SELECT count(*), sum(txns), FROM txpowlist WHERE relayed >= (EXTRACT (EPOCH from CURRENT_TIMESTAMP()) - ${hoursBack * SECONDS_IN_HOUR})*1000"

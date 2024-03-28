@@ -9,9 +9,9 @@ import ltd.mbor.minimak.*
 import org.jetbrains.compose.web.renderComposable
 import org.w3c.dom.url.URLSearchParams
 import ui.BlockList
-import ui.BurnStats
 import ui.Export
 import ui.Search
+import ui.Stats
 
 data class Block(
   val hash: String,
@@ -30,6 +30,8 @@ external fun decodeURIComponent(encodedURI: String): String
 
 val tokens = mutableStateMapOf<String, Token>()
 val burn = mutableStateMapOf<String, BurnStats>()
+val blockStats = mutableStateMapOf<Int, BlockStats>()
+var hashRate by mutableStateOf<BigDecimal?>(null)
 
 fun main() {
   
@@ -47,12 +49,14 @@ fun main() {
       MDS.createSQL()
       tokens.putAll(MDS.getTokens().associateBy { it.tokenId })
       populateBlocks(selectLatest(100), blocks)
+      hashRate = MDS.getStatus().weight
       burn.putAll(MDS.burn())
+      blockStats.putAll(MDS.getBlockStats())
     }
 
     renderComposable(rootElementId = "root") {
       console.log("isSearching: $isSearching")
-      BurnStats(burn)
+      Stats(hashRate, blockStats, burn)
       Search(searchText, searchFrom, searchTo, results) { isSearching = it }
       Export(if (isSearching) results else blocks)
       BlockList(if (isSearching) results else blocks)
