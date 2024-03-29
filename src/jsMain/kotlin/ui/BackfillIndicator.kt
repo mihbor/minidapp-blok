@@ -10,6 +10,7 @@ import getFlag
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ltd.mbor.minimak.MDS
+import org.jetbrains.compose.web.css.px
 import org.jetbrains.compose.web.dom.Text
 import scope
 import kotlin.time.Duration.Companion.seconds
@@ -35,6 +36,7 @@ fun BackfillIndicator() {
     checkIfBackfilling()
   }
   if (isBackfilling == true) {
-    Text("Backfilling missed blocks")
+    Spinner(20.px, 25.px, 25.px)
+    Text("Backfilling missed blocks...")
   }
 }

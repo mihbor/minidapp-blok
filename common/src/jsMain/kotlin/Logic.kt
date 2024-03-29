@@ -60,7 +60,7 @@ private suspend fun MdsApi.blockExists(id: String): Boolean? {
 
 private suspend fun MdsApi.markBackfilling(backfilling: Boolean) {
   if (backfilling != isBackfilling) {
-    sql(setFlag("backfilling", true))
+    sql(setFlag("backfilling", backfilling))
     isBackfilling = backfilling
   }
 }
