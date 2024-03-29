@@ -1,8 +1,8 @@
 package ui
 
 import BlockStats
-import SECONDS_IN_HOUR
 import androidx.compose.runtime.Composable
+import kotlinx.datetime.Clock
 import org.jetbrains.compose.web.css.DisplayStyle.Companion.InlineBlock
 import org.jetbrains.compose.web.css.display
 import org.jetbrains.compose.web.dom.B
@@ -20,7 +20,10 @@ fun BlockStats(blockStats: Map<Int, BlockStats>) {
         }
       }) {
         B { Text(if (it.key <= 48) "${it.key} hours" else "${it.key / 24} days") }
-        Text(" blocks: ${it.value.blockCount}, transactions: ${it.value.txCount}, ${if (it.value.blockCount > 0) "avg block time: ${it.key * SECONDS_IN_HOUR / it.value.blockCount}s" else ""}; ")
+        Text(" blocks: ${it.value.blockCount}, transactions: ${it.value.txCount}, ")
+        if (it.value.blockCount > 0 && it.value.minTimeMillis != null) {
+          Text("avg block time: ${(Clock.System.now().toEpochMilliseconds() - it.value.minTimeMillis!!) / 1000 / it.value.blockCount}s")
+        }
       }
     }
   }

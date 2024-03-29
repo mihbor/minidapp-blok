@@ -82,7 +82,7 @@ fun selectBlockFromTx(query: String) =
 
 const val SECONDS_IN_HOUR = 60 * 60
 fun selectStats(hoursBack: Int) =
-  "SELECT count(*), sum(txns), FROM txpowlist WHERE relayed >= (EXTRACT (EPOCH from CURRENT_TIMESTAMP()) - ${hoursBack * SECONDS_IN_HOUR})*1000"
+  """SELECT count(*), sum(txns), min(relayed) FROM txpowlist WHERE relayed >= (EXTRACT (EPOCH from CURRENT_TIMESTAMP()) - ${hoursBack * SECONDS_IN_HOUR})*1000"""
 
 fun setFlag(key: String, value: Boolean?) =
   """MERGE INTO flag KEY("key") VALUES ('$key', $value)"""

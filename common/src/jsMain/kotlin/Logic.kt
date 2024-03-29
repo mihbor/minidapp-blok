@@ -110,6 +110,7 @@ private suspend fun MdsApi.addBlock(block: Block, txpow: JsonElement) {
 data class BlockStats(
   val blockCount: Int,
   val txCount: Int,
+  val minTimeMillis: Long?,
 )
 
 suspend fun MdsApi.getBlockStats() = listOf(1, 24, 7*24).map {
@@ -117,5 +118,9 @@ suspend fun MdsApi.getBlockStats() = listOf(1, 24, 7*24).map {
 }.toMap()
 
 private fun JsonElement.statsResult() = jsonObject("rows").jsonArray.single().let {
-  BlockStats(it.jsonString("COUNT(*)").toInt(), it.jsonStringOrNull("SUM(TXNS)")?.toInt() ?: 0)
+  BlockStats(
+    it.jsonString("COUNT(*)").toInt(),
+    it.jsonStringOrNull("SUM(TXNS)")?.toInt() ?: 0,
+    it.jsonStringOrNull("MIN(RELAYED)")?.toLong()
+  )
 }

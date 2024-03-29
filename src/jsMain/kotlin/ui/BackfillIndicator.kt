@@ -32,11 +32,11 @@ tailrec suspend fun checkIfBackfilling() {
 @Composable
 fun BackfillIndicator() {
   scope.launch {
-    delay(1.seconds)
+    delay(3.seconds)
     checkIfBackfilling()
   }
   if (isBackfilling == true) {
     Spinner(20.px, 25.px, 25.px)
-    Text("Backfilling missed blocks...")
+    Text("Backfilling blocks...")
   }
 }
