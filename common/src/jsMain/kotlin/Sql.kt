@@ -1,4 +1,9 @@
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.jsonArray
+import ltd.mbor.minimak.MdsApi
+import ltd.mbor.minimak.jsonBoolean
+import ltd.mbor.minimak.jsonObject
+import ltd.mbor.minimak.jsonString
 
 const val INIT_SQL = """
   CREATE TABLE IF NOT EXISTS txpowlist (
@@ -20,6 +25,10 @@ const val INIT_SQL = """
   );
   CREATE INDEX IF NOT EXISTS hash_idx ON txpowlist(hash);
   CREATE INDEX IF NOT EXISTS height_idx ON txpowlist(height DESC);
+  CREATE TABLE IF NOT EXISTS flag (
+    "key" VARCHAR(255) NOT NULL PRIMARY KEY,
+    "value" BOOL
+  );
 """
 
 fun selectLatest(limit: Int = 100) = "SELECT * FROM txpowlist WHERE isblock = 1 ORDER BY HEIGHT DESC LIMIT $limit"
@@ -66,7 +75,7 @@ fun searchBlocksAndTransactions(text: String?, fromDate: String?, toDate: String
   return sb.toString()
 }
 
-fun textClause(text: String) = "txpow LIKE '%$text%' OR hash IN(${selectBlockFromTx(text)})"
+private fun textClause(text: String) = "txpow LIKE '%$text%' OR hash IN(${selectBlockFromTx(text)})"
 
 fun selectBlockFromTx(query: String) =
   "SELECT block FROM tx WHERE id LIKE '%$query%' OR header LIKE '%$query%' OR inputs LIKE '%$query%' OR outputs LIKE '%$query%' OR state LIKE '%$query%'"
@@ -74,3 +83,15 @@ fun selectBlockFromTx(query: String) =
 const val SECONDS_IN_HOUR = 60 * 60
 fun selectStats(hoursBack: Int) =
   "SELECT count(*), sum(txns), FROM txpowlist WHERE relayed >= (EXTRACT (EPOCH from CURRENT_TIMESTAMP()) - ${hoursBack * SECONDS_IN_HOUR})*1000"
+
+fun setFlag(key: String, value: Boolean?) =
+  """MERGE INTO flag KEY("key") VALUES ('$key', $value)"""
+
+fun selectFlag(key: String) =
+  """SELECT "value" FROM flag WHERE "key" = '$key'"""
+
+suspend fun MdsApi.getFlag(key: String) = sql(selectFlag(key))
+  ?.takeIf{ it.jsonBoolean("status") && it.jsonBoolean("results") }
+  ?.let{
+    it.jsonObject("rows").jsonArray.singleOrNull()?.jsonString("value")?.toBoolean()
+  }

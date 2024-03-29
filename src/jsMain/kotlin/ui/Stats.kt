@@ -11,4 +11,5 @@ fun Stats(hashRate: BigDecimal?, blockStats: Map<Int, BlockStats>, burnStats: Ma
   hashRate?.let { Text("Hash rate: ${it.toPlainString()}") }
   BlockStats(blockStats)
   BurnStats(burnStats)
+  BackfillIndicator()
 }
