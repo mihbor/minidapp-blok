@@ -1,6 +1,7 @@
 package ui
 
 import Block
+import RESULT_LIMIT
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,7 +40,7 @@ fun Search(searchText: String?, searchFrom: String?, searchTo: String?, results:
   fun updateResults(search: String?, fromDate: String?, toDate: String?) {
     scope.launch {
       results.clear()
-      populateBlocks(searchBlocksAndTransactions(search, fromDate, toDate), results)
+      populateBlocks(searchBlocksAndTransactions(search, fromDate, toDate, RESULT_LIMIT), results)
       setSearching(true)
     }
   }

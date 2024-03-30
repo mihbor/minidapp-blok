@@ -2,11 +2,10 @@ package service
 
 import addTxPoW
 import createSQL
+import getBlockStats
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.jsonObject
-import ltd.mbor.minimak.ServiceMDS
-import ltd.mbor.minimak.jsonString
+import ltd.mbor.minimak.*
 
 val scope = MainScope()
 
@@ -61,8 +60,13 @@ fun main() {
     scope.launch {
       if (msg.jsonString("event") == "inited") {
         ServiceMDS.createSQL()
+        val hourStats = ServiceMDS.getBlockStats()[1]
+        if (hourStats?.blockCount == 0) {
+          val block = ServiceMDS.getStatus().chain.block
+          ServiceMDS.getTxPoW(block)?.let{ ServiceMDS.addTxPoW(it) }
+        }
       } else if (msg.jsonString("event") == "NEWBLOCK") {
-        ServiceMDS.addTxPoW(msg.jsonObject["data"]!!.jsonObject["txpow"]!!)
+        ServiceMDS.addTxPoW(msg.jsonObject("data").jsonObject("txpow"))
       }
     }
   }

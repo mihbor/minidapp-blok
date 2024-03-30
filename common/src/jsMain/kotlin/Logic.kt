@@ -119,8 +119,8 @@ suspend fun MdsApi.getBlockStats() = listOf(1, 24, 7*24).map {
 
 private fun JsonElement.statsResult() = jsonObject("rows").jsonArray.single().let {
   BlockStats(
-    it.jsonString("COUNT(*)").toInt(),
-    it.jsonStringOrNull("SUM(TXNS)")?.toInt() ?: 0,
-    it.jsonStringOrNull("MIN(RELAYED)")?.toLong()
+    blockCount = it.jsonString("COUNT(*)").toInt(),
+    txCount = it.jsonStringOrNull("SUM(TXNS)")?.toInt() ?: 0,
+    minTimeMillis = it.jsonStringOrNull("MIN(RELAYED)")?.toLong()
   )
 }

@@ -13,6 +13,8 @@ import ui.Export
 import ui.Search
 import ui.Stats
 
+const val RESULT_LIMIT = 100
+
 data class Block(
   val hash: String,
   val number: Long,
@@ -50,7 +52,7 @@ fun main() {
       initMinima(uid) { block -> blocks.add(0, block) }
       MDS.createSQL()
       tokens.putAll(MDS.getTokens().associateBy { it.tokenId })
-      populateBlocks(selectLatest(100), blocks)
+      populateBlocks(selectLatest(RESULT_LIMIT), blocks)
       hashRate = MDS.getStatus().weight
       burn.putAll(MDS.burn())
       blockStats.putAll(MDS.getBlockStats())

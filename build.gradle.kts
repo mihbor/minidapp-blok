@@ -6,7 +6,7 @@ plugins {
 
 allprojects {
   group = "ltd.mbor.minima.dapp"
-  version = "1.0-SNAPSHOT"
+  version = "0.5-SNAPSHOT"
   repositories {
     mavenLocal()
     google()
