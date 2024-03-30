@@ -1,7 +1,7 @@
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
-  id("org.jetbrains.compose") version "1.4.3"
+  id("org.jetbrains.compose") version "1.6.0"
 }
 
 allprojects {
@@ -12,6 +12,7 @@ allprojects {
     google()
     mavenCentral()
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+    maven("https://maven.pkg.jetbrains.space/kotlin/p/wasm/experimental")
     maven("https://maven.pkg.github.com/mihbor/MinimaK") {
       credentials {
         username = project.findProperty("gpr.user") as String? ?: System.getenv("GITHUB_ACTOR")
@@ -33,7 +34,7 @@ kotlin {
   sourceSets {
     val jsMain by getting {
       dependencies {
-        implementation(compose.web.core)
+        implementation(compose.html.core)
         implementation(compose.runtime)
         implementation(project(":common"))
       }
@@ -43,13 +44,13 @@ kotlin {
 
 tasks.register<Copy>("updateDappVersion") {
   from("src/jsMain/resources/dapp.conf")
-  into(layout.buildDirectory.dir("distributions/"))
+  into(layout.buildDirectory.dir("dist/js/productionExecutable/"))
   filter { line -> line.replace("\"version\": \".*\"".toRegex(), "\"version\": \"$version\"") }
 }
 
 tasks.register<Copy>("copyService") {
   dependsOn(":service:jsBrowserDistribution")
-  from("service/build/distributions/service.js")
+  from("service/build/dist/js/productionExecutable/service.js")
   into(layout.buildDirectory.dir("processedResources/js/main/"))
 }
 
@@ -61,9 +62,5 @@ tasks.register<Zip>("minidappDistribution") {
   dependsOn("jsBrowserDistribution")
   archiveFileName.set("${project.name}-${project.version}.mds.zip")
   destinationDirectory.set(layout.buildDirectory.dir("minidapp"))
-  from(layout.buildDirectory.dir("distributions"))
-}
-
-configurations.all {
-  resolutionStrategy.cacheChangingModulesFor(1, "hours")
+  from(layout.buildDirectory.dir("dist/js/productionExecutable"))
 }
