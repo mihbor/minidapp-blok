@@ -53,13 +53,13 @@ fun insertTransaction(
   state: String
 ) = "INSERT INTO tx VALUES (\'$id\', \'$block\', \'$header\', \'$inputs\', \'$outputs\', \'$state\')"
 
-fun searchBlocks(query: String) =
-  "SELECT * FROM txpowlist WHERE txpow LIKE '%$query%' ORDER BY RELAYED"
+fun searchBlocks(query: String, limit: Int, offset: Int = 0) =
+  "SELECT * FROM txpowlist WHERE txpow LIKE '%$query%' ORDER BY RELAYED LIMIT $limit OFFSET $offset"
 
-fun searchTransactions(query: String) =
-  "SELECT * FROM tx WHERE id LIKE '%$query%' OR header LIKE '%$query%' OR inputs LIKE '%$query%' OR outputs LIKE '%$query%' OR state LIKE '%$query%' ORDER BY id"
+fun searchTransactions(query: String, limit: Int, offset: Int = 0) =
+  "SELECT * FROM tx WHERE id LIKE '%$query%' OR header LIKE '%$query%' OR inputs LIKE '%$query%' OR outputs LIKE '%$query%' OR state LIKE '%$query%' ORDER BY id LIMIT $limit OFFSET $offset"
 
-fun searchBlocksAndTransactions(text: String?, fromDate: String?, toDate: String?, limit: Int): String {
+fun searchBlocksAndTransactions(text: String?, fromDate: String?, toDate: String?, limit: Int, offset: Int = 0): String {
   val sb = StringBuilder("SELECT * FROM txpowlist ")
   if (text != null || fromDate != null || toDate != null) sb.append("WHERE ")
   text?.let{ sb.append(textClause(it)) }
@@ -71,7 +71,7 @@ fun searchBlocksAndTransactions(text: String?, fromDate: String?, toDate: String
     if (text != null || fromDate != null) sb.append(" AND ")
     sb.append("relayed <= ").append(Instant.parse("$it:59Z").toEpochMilliseconds())
   }
-  sb.append(" ORDER BY RELAYED DESC LIMIT $limit")
+  sb.append(" ORDER BY RELAYED DESC LIMIT $limit OFFSET $offset")
   return sb.toString()
 }
 

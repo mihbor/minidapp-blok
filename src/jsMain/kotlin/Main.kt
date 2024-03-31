@@ -7,11 +7,10 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonElement
 import ltd.mbor.minimak.*
 import org.jetbrains.compose.web.renderComposable
+import org.w3c.dom.PopStateEvent
+import org.w3c.dom.url.URL
 import org.w3c.dom.url.URLSearchParams
-import ui.BlockList
-import ui.Export
-import ui.Search
-import ui.Stats
+import ui.*
 
 const val RESULT_LIMIT = 100
 
@@ -41,31 +40,83 @@ fun main() {
   
   init { uid ->
     val urlParams = URLSearchParams(window.location.search)
-    val searchText = urlParams.get("searchText")
-    val searchFrom = urlParams.get("searchFrom")
-    val searchTo = urlParams.get("searchTo")
-    var isSearching by mutableStateOf(!searchText.isNullOrBlank() || !searchFrom.isNullOrBlank() || !searchTo.isNullOrBlank())
+    var searchText by mutableStateOf(urlParams.get("searchText"))
+    var searchFrom by mutableStateOf(urlParams.get("searchFrom"))
+    var searchTo by mutableStateOf(urlParams.get("searchTo"))
+    var limit by mutableStateOf(urlParams.get("limit")?.toInt() ?: RESULT_LIMIT)
+    var page by mutableStateOf(urlParams.get("page")?.toInt() ?: 0)
+    var isSearchingOrPaging by mutableStateOf(!searchText.isNullOrBlank() || !searchFrom.isNullOrBlank() || !searchTo.isNullOrBlank() || page != 0)
     val blocks = mutableStateListOf<Block>()
     val results = mutableStateListOf<Block>()
+
+    fun updateResults(search: String?, fromDate: String?, toDate: String?, newPage: Int) {
+      page = newPage
+      scope.launch {
+        results.clear()
+        results.addAll(populateBlocks(searchBlocksAndTransactions(search, fromDate, toDate, limit, page * limit)))
+        isSearchingOrPaging = true
+      }
+    }
+
+    fun setPage(newPage: Int) {
+      setUrlParams(searchText?.takeUnless { it.isBlank() }, searchFrom?.takeUnless { it.isBlank() }, searchTo?.takeUnless { it.isBlank() }, newPage)
+      updateResults(searchText, searchFrom, searchTo, newPage)
+    }
 
     scope.launch {
       initMinima(uid) { block -> blocks.add(0, block) }
       MDS.createSQL()
       tokens.putAll(MDS.getTokens().associateBy { it.tokenId })
-      populateBlocks(selectLatest(RESULT_LIMIT), blocks)
+      blocks.addAll(populateBlocks(selectLatest(RESULT_LIMIT)))
+      if (isSearchingOrPaging) results.addAll(populateBlocks(searchBlocksAndTransactions(searchText, searchFrom, searchTo, limit, page * limit)))
       hashRate = MDS.getStatus().weight
       burn.putAll(MDS.burn())
       blockStats.putAll(MDS.getBlockStats())
     }
 
+    window.addEventListener("popstate", {
+      val event = it as PopStateEvent
+      if(event.state == null) {
+        searchText = ""
+        searchFrom = ""
+        searchTo = ""
+        page = 0
+        limit = RESULT_LIMIT
+        isSearchingOrPaging = false
+      } else {
+        it.state.toString().split(";").let {
+          searchText = it[0]
+          searchFrom = it[1]
+          searchTo = it[2]
+          page = it[3].toInt()
+          limit = it[4].toIntOrNull() ?: RESULT_LIMIT
+        }
+      }
+    })
+
     renderComposable(rootElementId = "root") {
-      console.log("isSearching: $isSearching")
+      console.log("isSearching: $isSearchingOrPaging")
       Stats(hashRate, blockStats, burn)
-      Search(searchText, searchFrom, searchTo, results) { isSearching = it }
-      Export(if (isSearching) results else blocks)
-      BlockList(if (isSearching) results else blocks)
+      Search(searchText, searchFrom, searchTo, ::updateResults)
+      Export(if (isSearchingOrPaging) results else blocks)
+      Paginator(page, limit, results.size, ::setPage)
+      BlockList(if (isSearchingOrPaging) results else blocks)
+      Paginator(page, limit, results.size, ::setPage)
     }
   }
+}
+
+fun setUrlParams(search: String?, fromDate: String?, toDate: String?, page: Int = 0, limit: Int = RESULT_LIMIT) {
+  val url = URL(window.location.href)
+  if (search != null) url.searchParams.set("searchText", search)
+  else url.searchParams.delete("searchText")
+  if (fromDate != null) url.searchParams.set("searchFrom", fromDate)
+  else url.searchParams.delete("searchFrom")
+  if (toDate != null) url.searchParams.set("searchTo", toDate)
+  else url.searchParams.delete("searchTo")
+  url.searchParams.set("limit", limit.toString())
+  url.searchParams.set("page", page.toString())
+  window.history.pushState(listOf(search, fromDate, toDate, page, limit).map { it ?: "" }.joinToString(";"), "", url.toString())
 }
 
 fun init(block: (String?) -> Unit) {

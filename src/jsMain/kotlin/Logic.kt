@@ -1,26 +1,25 @@
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import com.ionspin.kotlin.bignum.decimal.toBigDecimal
 import kotlinx.browser.window
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.*
 import ltd.mbor.minimak.*
 
-suspend fun populateBlocks(sql: String, blocks: SnapshotStateList<Block>) {
-  try {
+suspend fun populateBlocks(sql: String): List<Block> {
+  return try {
     val result = MDS.sql(sql)
     if (result?.jsonBoolean("status") == true) {
-      result.jsonObject["rows"]?.let {
-        blocks += it.jsonArray
-          .map { it.jsonString("TXPOW") }
-          .map(::decodeURIComponent)
-          .map{ json.decodeFromString<JsonElement>(it) }
-          .map(::mapTxPoW)
+      result.jsonObject["rows"]?.jsonArray?.map {
+        it.jsonString("TXPOW")
+          .let(::decodeURIComponent)
+          .let{ json.decodeFromString<JsonElement>(it) }
+          .let(::mapTxPoW)
       } ?: throw Error("1. Fetching from sql failed.")
     } else {
       throw Error("2. Fetching from sql failed.")
     }
   } catch(err: Error) {
     log(err.toString())
+    emptyList()
   }
 }
 
