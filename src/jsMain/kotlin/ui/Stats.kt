@@ -7,8 +7,8 @@ import ltd.mbor.minimak.BurnStats
 import org.jetbrains.compose.web.dom.Text
 
 @Composable
-fun Stats(hashRate: BigDecimal?, blockStats: Map<Int, BlockStats>, burnStats: Map<String, BurnStats>) {
-  hashRate?.let { Text("Hash rate: ${it.toPlainString()}") }
+fun Stats(chainWeight: BigDecimal?, blockStats: Map<Int, BlockStats>, burnStats: Map<String, BurnStats>) {
+  chainWeight?.let { Text("Chain weight: ${it.toPlainString()}") }
   BlockStats(blockStats)
   BurnStats(burnStats)
   BackfillIndicator()
