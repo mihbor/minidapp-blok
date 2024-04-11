@@ -42,10 +42,11 @@ suspend fun initMinima(uid: String?, consumer: (Block) -> Unit) {
 
 fun mapTxPoW(txpow: JsonElement): Block {
   val header = txpow.jsonObject["header"]!!
+  val isTransaction = txpow.jsonBoolean("istransaction")
   return Block(
     hash = txpow.jsonString("txpowid"),
     number = header.jsonString("block").toLong(),
-    transactionCount = txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!.jsonArray.size,
+    transactionCount = txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!.jsonArray.size + if (isTransaction) 1 else 0,
     timestamp = Instant.fromEpochMilliseconds(header.jsonString("timemilli").toLong()),
     size = txpow.jsonObject["size"]!!.jsonPrimitive.long,
     nonce = header.jsonString("nonce").toBigDecimal(),

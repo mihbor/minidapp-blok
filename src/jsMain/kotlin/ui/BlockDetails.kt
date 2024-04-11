@@ -10,6 +10,7 @@ import kotlinx.serialization.json.jsonObject
 import ltd.mbor.minimak.MDS
 import ltd.mbor.minimak.getTxPoW
 import ltd.mbor.minimak.json
+import ltd.mbor.minimak.jsonBoolean
 import org.jetbrains.compose.web.attributes.cols
 import org.jetbrains.compose.web.attributes.colspan
 import org.jetbrains.compose.web.attributes.rows
@@ -58,7 +59,9 @@ fun BlockDetails(block: Block) {
     if (block.transactionCount > 0) Tr {
       Td()
       Td {
-        val transactions: List<String> = Json.decodeFromJsonElement(block.txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!)
+        val transactions: List<String> = Json.decodeFromJsonElement<List<String>>(block.txpow.jsonObject["body"]!!.jsonObject["txnlist"]!!).let{
+          if (block.txpow.jsonBoolean("istransaction")) it + block.hash else it
+        }
         transactions.forEach { txnId ->
           Hr()
           Div({
