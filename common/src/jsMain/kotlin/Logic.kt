@@ -97,9 +97,9 @@ private suspend fun MdsApi.addBlock(block: Block, txpow: JsonElement) {
       id = block.id,
       txpow = txpowEncoded,
       height = block.header.block,
-      isBlock = if (txpow.jsonBoolean("isblock")) 1 else 0,
       relayed = block.header.timeMillis,
-      length = block.body.txnList.size
+      length = block.body.txnList.size,
+      isTransaction = txpow.jsonBoolean("istransaction"),
     )
   )
   if (blockResult?.jsonBoolean("status") == true) {

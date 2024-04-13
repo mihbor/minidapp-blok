@@ -10,9 +10,9 @@ const val INIT_SQL = """
     txpow VARCHAR(64000),
     height BIGINT NOT NULL,
     hash VARCHAR(160) NOT NULL PRIMARY KEY,
-    isblock INT NOT NULL,
     relayed BIGINT NOT NULL,
-    txns INT NOT NULL
+    txns INT NOT NULL,
+    istransaction BOOL
   );
   CREATE TABLE IF NOT EXISTS tx (
     id VARCHAR(255) NOT NULL PRIMARY KEY,
@@ -31,16 +31,16 @@ const val INIT_SQL = """
   );
 """
 
-fun selectLatest(limit: Int = 100) = "SELECT * FROM txpowlist WHERE isblock = 1 ORDER BY HEIGHT DESC LIMIT $limit"
+fun selectLatest(limit: Int = 100) = "SELECT * FROM txpowlist ORDER BY height DESC LIMIT $limit"
 
 fun insertBlock(
   id: String,
   txpow: String?,
   height: Int,
-  isBlock: Int,
   relayed: Long,
-  length: Int
-) = "INSERT INTO txpowlist VALUES (\'$txpow\', $height, '$id', $isBlock, $relayed, $length)"
+  length: Int,
+  isTransaction: Boolean
+) = "INSERT INTO txpowlist VALUES (\'$txpow\', $height, '$id', $relayed, $length, $isTransaction)"
 
 fun selectBlockById(id: String) = "SELECT * FROM txpowlist WHERE hash = \'$id\'"
 
