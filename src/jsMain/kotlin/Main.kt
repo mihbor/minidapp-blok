@@ -32,7 +32,7 @@ external fun decodeURIComponent(encodedURI: String): String
 val tokens = mutableStateMapOf<String, Token>()
 val burn = mutableStateMapOf<String, BurnStats>()
 val blockStats = mutableStateMapOf<Int, BlockStats>()
-var chainWeight by mutableStateOf<BigDecimal?>(null)
+var status by mutableStateOf<Status?>(null)
 
 val txnCache = mutableStateMapOf<String, JsonElement?>()
 
@@ -69,7 +69,7 @@ fun main() {
       tokens.putAll(MDS.getTokens().associateBy { it.tokenId })
       blocks.addAll(populateBlocks(selectLatest(RESULT_LIMIT)))
       if (isSearchingOrPaging) results.addAll(populateBlocks(searchBlocksAndTransactions(searchText, searchFrom, searchTo, limit, page * limit)))
-      chainWeight = MDS.getStatus().chain.weight
+      status = MDS.getStatus()
       burn.putAll(MDS.burn())
       blockStats.putAll(MDS.getBlockStats())
     }
@@ -96,7 +96,7 @@ fun main() {
 
     renderComposable(rootElementId = "root") {
       console.log("isSearching: $isSearchingOrPaging")
-      Stats(chainWeight, blockStats, burn)
+      Stats(status, blockStats, burn)
       Search(searchText, searchFrom, searchTo, ::updateResults)
       Export(if (isSearchingOrPaging) results else blocks)
       Paginator(page, limit, results.size, ::setPage)

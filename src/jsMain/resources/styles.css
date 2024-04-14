@@ -24,3 +24,9 @@
     -webkit-transform: rotate(360deg);
   }
 }
+tr:nth-child(odd) {
+  background-color: #fafafa;
+}
+tr:nth-child(even) {
+  background-color: #eeeeee;
+}

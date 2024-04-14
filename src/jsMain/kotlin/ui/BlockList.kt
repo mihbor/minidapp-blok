@@ -4,13 +4,17 @@ import Block
 import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import org.jetbrains.compose.web.attributes.colspan
-import org.jetbrains.compose.web.css.fontWeight
+import org.jetbrains.compose.web.css.*
+import org.jetbrains.compose.web.css.Position.Companion.Absolute
+import org.jetbrains.compose.web.css.Position.Companion.Relative
 import org.jetbrains.compose.web.dom.*
 
 @Composable
 fun BlockList(blocks: SnapshotStateList<Block>) {
   var selected by remember { mutableStateOf<String?>(null) }
-  Table {
+  Table({
+    style { width(100.percent) }
+  }) {
     Thead {
       Tr {
         Td { Text("Height") }
@@ -35,7 +39,24 @@ fun BlockList(blocks: SnapshotStateList<Block>) {
             }
           }) {
             Td { Text(block.number.toString()) }
-            Td { Text(block.hash) }
+            Td({
+              style { position(Relative)
+              width(100.percent)}
+            }) {
+              Div({
+                style {
+                  position(Absolute)
+                  left(0.px)
+                  top(0.px)
+                  width(100.percent)
+                  overflow("hidden")
+                  whiteSpace("nowrap")
+                  property("text-overflow", "ellipsis")
+                }
+              }) {
+                Text(block.hash)
+              }
+            }
             Td { Text(block.transactionCount.toString()) }
             Td { Text(block.timestamp.toString()) }
           }
