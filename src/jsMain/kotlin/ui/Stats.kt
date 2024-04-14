@@ -20,10 +20,20 @@ fun Stats(status: Status?, blockStats: Map<Int, BlockStats>, burnStats: Map<Stri
         justifyContent(JustifyContent.SpaceEvenly)
       }
     }) {
-      Span {
+      Span({
+        style {
+          backgroundColor(rgb(225, 225, 225))
+          width(22.percent)
+        }
+      }) {
         Text("Chain weight: ${it.chain.weight.toPlainString()}")
       }
-      Span {
+      Span({
+        style {
+          backgroundColor(rgb(240, 240, 240))
+          width(78.percent)
+        }
+      }) {
         Text("difficulty: ${it.chain.difficulty}")
       }
     }
